@@ -1,280 +1,281 @@
-# 🎮 Oracle Cloud Minecraft — 5-Minute Auto Setup
+<div align="center">
 
-**Deploy a modded Minecraft server** (Forge 1.20.1 / Fabric / Vanilla / modpack) on **Oracle Cloud's Always Free** tier: 2 ARM OCPUs, **12 GB RAM**, 200 GB disk, **$0/month**, online 24/7 — no DevOps skills required.
+# 🎮 Your own Minecraft server — free, forever
 
-**🇬🇧 English** | **[🇫🇷 Français (README complet)](README.fr.md)**
+**A modded Minecraft server on Oracle Cloud's free tier.**
+No subscription. No ads. No "server falls asleep after 10 minutes".
+
+**12 GB RAM** · **0 $/month** · **online 24/7** · no tech skills needed
+
+**🇬🇧 English** · [🇫🇷 Français](README.fr.md)
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Cost](https://img.shields.io/badge/cost-0%E2%82%AC/month-success)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
-![Bash](https://img.shields.io/badge/shell-bash-4EAA25)
-![Languages](https://img.shields.io/badge/UI-English%20%7C%20Fran%C3%A7ais-informational)
+![Cost](https://img.shields.io/badge/cost-0%24%2Fmonth-success)
+![Platform](https://img.shields.io/badge/works%20on-Windows%20%7C%20macOS%20%7C%20Linux-blue)
+![UI](https://img.shields.io/badge/wizard-English%20%7C%20Fran%C3%A7ais-informational)
+
+</div>
 
 ---
 
-## 📑 Table of contents
+## ⏱️ Start here — 4 small steps
 
-- [What is this?](#-what-is-this)
-- [What you need](#-what-you-need)
-- [⚡ Quick start — the 3-step path](#-quick-start--the-3-step-path)
-- [📚 Full installation tutorial (for anyone)](#-full-installation-tutorial-for-anyone)
-  - [Step 0 — requirements check](#step-0--requirements-check-2-minutes)
-  - [Step 1 — create your Oracle account](#step-1--create-your-oracle-account-10-minutes-once)
-  - [Step 2 — create your virtual machine](#step-2--create-your-virtual-machine-10-minutes-once)
-  - [Step 3 — run the installer](#step-3--run-the-installer-10-minutes)
-  - [Step 4 — open the network ports (mandatory)](#step-4--open-the-network-ports-mandatory-3-minutes)
-  - [Step 5 — connect with Minecraft](#step-5--connect-with-minecraft-1-minute)
-  - [Step 6 — mods for every player](#step-6--mods-for-every-player)
-  - [Step 7 — become the server admin](#step-7--become-the-server-admin)
-- [What the installer does for you](#-what-the-installer-does-for-you)
-- [Managing your server](#-managing-your-server)
-- [Troubleshooting](#-troubleshooting)
-- [FAQ](#-faq)
-- [How it works (technical guarantees)](#-how-it-works-technical-guarantees)
-- [Compatibility](#-compatibility)
-- [Documentation](#-documentation)
-- [Contributing](#-contributing)
-- [License](#-license)
+Your part takes about **15 minutes of clicking**. The wizard does the rest.
 
----
+### 1 · Download this project
 
-## 🤔 What is this?
+*1 minute*
 
-Hosting a modded Minecraft server normally costs **$15–30/month** (or free hosts with 1–2 GB RAM, queues and auto-shutdown). This project deploys yours on **Oracle Cloud's Always Free tier** — genuinely free, forever, no trial deadline — and automates *everything*:
+Green **⟵ Code** button (top right of this page) → **Download ZIP** → unzip the folder.
 
-| | Free hosts (Aternos…) | Paid host | **This project (OCI)** |
-|---|---|---|---|
-| RAM | 1–2 GB | 8 GB | **12 GB** |
-| Price | Free | $15–30/mo | **$0/month** |
-| Queue / auto-sleep | Yes | No | **No — 24/7** |
-| Control | Limited | Medium | **Total** |
-| Setup time | ~10 min | ~15 min | **~10 min (guided)** |
+### 2 · Run the installer
 
-Real cost: Minecraft **Java Edition** (~$30, one-time purchase) + $0/month. See the [FAQ](#-faq) for why Oracle does this and whether it can go away.
+*1 minute*
 
-## 📋 What you need
+**Windows** — open the folder and **double-click `start-windows.bat`**
 
-- **Minecraft Java Edition** (not Bedrock/console/mobile).
-- A **bank card** for Oracle's identity check (a ~$1 pre-authorization, refunded; **nothing is charged** on the free tier — ask an adult if needed).
-- A computer with **Windows** (with [Git for Windows](https://git-scm.com/download/win)), **macOS**, or **Linux**.
-- About **25 minutes** total (most of it waiting).
-- No tech knowledge: the installer includes a **guided wizard** with kid-friendly explanations, in **English or French** (auto-detected).
-
-## ⚡ Quick start — the 3-step path
-
-If you just want to go (the wizard will explain everything else):
-
-1. **Download this project**: green **⟵ Code** button (top right) → **Download ZIP** → unzip it.
-2. **Windows**: double-click **`start-windows.bat`**. **macOS/Linux**: open a terminal in the folder and run `bash setup.sh`.
-3. Choose **Guided mode** and follow along — press **Enter** to keep recommended answers. The wizard helps you create the Oracle account and the VM if you don't have them yet, then installs everything and shows you your server address.
-
-Prefer reading everything first? Follow the [full tutorial](#-full-installation-tutorial-for-anyone) below.
-
----
-
-## 📚 Full installation tutorial (for anyone)
-
-This tutorial assumes **zero technical knowledge**. The guided wizard in `setup.sh` follows exactly the same steps and waits for you between each one — you can use either.
-
-### Step 0 — requirements check (2 minutes)
-
-Make sure you have everything from [What you need](#-what-you-need). On Windows, install [Git for Windows](https://git-scm.com/download/win) first (next, next, finish — it provides the terminal the installer runs in).
-
-Get the project on your machine:
-
-```bash
-# Option A (simplest): green "Code" button → Download ZIP → unzip
-# Option B (git):       git clone https://github.com/xyrpxx/oracle-minecraft-5min-setup.git
-cd oracle-minecraft-5min-setup
-```
-
-### Step 1 — create your Oracle account (10 minutes, once)
-
-1. Go to <https://cloud.oracle.com> → **Start for free**.
-2. Email + password (write them down!), name, country, phone (SMS check).
-3. Bank card for identity verification — **nothing gets charged** as long as you stay on the free tier. Virtual/disposable cards are usually rejected.
-4. **Home Region**: permanent choice — pick the closest to you (e.g. UK South or Germany Central in Europe) for the least lag.
-5. Wait for the confirmation email (up to 30 minutes), then sign in.
-
-> ⚠️ If Oracle ever offers **« Upgrade to Pay As You Go »** — decline. Staying on free means $0, guaranteed.
-
-### Step 2 — create your virtual machine (10 minutes, once)
-
-In the Oracle console: **☰ menu → Compute → Instances → Create instance**, then:
-
-| Field | What to enter |
-|---|---|
-| Name | Anything (e.g. `minecraft`) |
-| Image *(Edit)* | **Ubuntu** 22.04 or 24.04 — **not** “Minimal” |
-| Shape *(Edit)* | **Ampere** tab → **VM.Standard.A1.Flex** → OCPUs **2**, Memory **12 GB** |
-| SSH keys ⚠️ | **Generate a key pair** → **Save Private Key** (keep this file forever — it's the key to your machine!) → **Save Public Key** |
-| Networking | Default, with **Assign a public IPv4 address** |
-
-Click **Create**, wait 2–5 minutes for the green **Running** status, and note the **Public IP Address** (looks like `129.213.56.123`).
-
-> If you get **“Out of capacity”**: the region is saturated — retry later or pick another region.
-
-### Step 3 — run the installer (10 minutes)
-
-**Windows**: double-click **`start-windows.bat`**.
-**macOS / Linux / Git Bash manually**:
+**Mac / Linux** — open a terminal in that folder and run:
 
 ```bash
 bash setup.sh
 ```
 
-Pick **Guided mode**. The wizard asks:
+### 3 · Follow the wizard
 
-| Question | Meaning | Recommended |
-|---|---|---|
-| Server type | Vanilla (no mods), Forge (classic mods), Fabric (light mods) or a preset modpack | **Forge** for mods |
-| Minecraft version | Game version — everyone must use the same | **1.20.1** |
-| RAM | Memory given to the server (max 8 of the 12 GB) | **8 GB** |
-| Max players | Slots on the server | **10** |
-| Crafty panel | Optional web page to manage the server with buttons | **Yes** |
-| Server pack URL *(modpacks only)* | Direct link to the pack's server file — see below | — |
+*~10 minutes, mostly forms*
 
-For a modpack: on its CurseForge page → **Files** tab → your version → **Additional Files** → right-click the **Server Pack** → **Copy link address**, then paste it.
+Pick **Guided mode**. It walks you through creating your free Oracle account
+and your server machine — and **waits for you** between each step.
 
-The installer then connects to your machine, installs Java 21 + the server + firewall + auto-restart, starts it, and prints **your server address**.
+> 💡 **Press Enter** at any question to accept the recommended answer.
+> You can't really get this wrong.
+
+### 4 · Open the ports
+
+*3 minutes, done once*
+
+Three clicks in the Oracle console so your friends can connect.
+The wizard opens the right page and shows you exactly what to click.
+
+### 🎉 That's it
+
+The installer hands you your **server address** — the only thing your
+friends ever need. Paste it into Minecraft: *Multiplayer → Add Server*.
+
+---
+
+## 📦 What you get
+
+- **A real machine in the cloud** — 2 CPU cores, 12 GB RAM, 200 GB disk
+- **Always on** — plays 24/7, restarts itself after any crash
+- **Mods** — Forge, Fabric, Vanilla, or a ready-made modpack
+- **A web dashboard** (optional) — start/stop and read logs like a pro
+- **Safety nets** — one-command backups, restore, monitoring, updates
+
+## 🧾 What you need
+
+- **Minecraft Java Edition** (~30 $, one time — not Bedrock/console/mobile)
+- A **bank card** for Oracle's identity check
+  (nothing is ever charged on the free plan — a ~1 $ hold is refunded)
+- **Windows** (with [Git for Windows](https://git-scm.com/download/win)), **Mac**, or **Linux**
+- That's all. Really.
+
+> 💬 The wizard speaks **English and French** — it picks your language automatically.
+
+---
+
+## 🔍 Curious or stuck? Open only what you need
 
 <details>
-<summary>🖥️ Scripted / expert mode (no questions asked)</summary>
+<summary><b>📖 The complete walkthrough</b> — every click, zero guessing</summary>
 
-```bash
-bash setup.sh --lang en --mode expert --ip 1.2.3.4 --key ~/ssh-key-2026-08-22.key \
-     --type forge --mc-version 1.20.1 --ram 8 --players 10 --crafty true --yes
-# Preview without touching the VM: add --dry-run
-# All options: bash setup.sh --help
-```
-</details>
+<br>
 
-### Step 4 — open the network ports (mandatory, 3 minutes)
+**Step 0 — the folder on your machine.**
+Install [Git for Windows](https://git-scm.com/download/win) first if you're on Windows
+(next → next → finish). Then get this project: green **Code** button → **Download ZIP** → unzip.
 
-Oracle shields every machine behind a cloud firewall. The installer configures the machine itself; **you** must click 3 rules in the console (once):
+**Step 1 — Oracle account** *(10 min, once)*
 
-**Networking → Virtual Cloud Networks → your VCN → Security Lists → Default Security List → Add Ingress Rules:**
+1. Go to <https://cloud.oracle.com> → **Start for free**
+2. Email + password (write them down), name, country, phone
+3. Card for the identity check — nothing gets charged
+4. **Region**: pick the closest to you (permanent choice, affects lag)
+5. Wait for the confirmation email (up to 30 min)
 
-| | Rule 1 | Rule 2 | Rule 3 |
-|---|---|---|---|
-| Source CIDR | `0.0.0.0/0` | `0.0.0.0/0` | `0.0.0.0/0` |
-| IP Protocol | TCP | UDP | TCP |
-| Destination Port | `25565` | `25565` | `8443` |
-| Description | Minecraft TCP | Minecraft UDP | Crafty Panel |
+⚠️ If Oracle offers **"Upgrade to Pay As You Go"** — **decline**. Free means 0 $.
 
-Full walkthrough with screenshots-level detail: **[docs/en/vcn-setup.md](docs/en/vcn-setup.md)** (or the [OCI CLI script](deploy/oci_ingress_setup.sh) if you prefer automation).
+**Step 2 — the machine** *(10 min, once)*
 
-### Step 5 — connect with Minecraft (1 minute)
+Console → ☰ menu → **Compute → Instances → Create instance**, then:
 
-1. Minecraft **Java Edition** → **Multiplayer** → **Add Server**.
-2. Address: `YOUR_SERVER_IP:25565`.
-3. Join! 🎉 (If it fails → [Troubleshooting](#-troubleshooting).)
+| Field | Enter |
+|---|---|
+| Image | **Ubuntu 22.04 or 24.04** (not *Minimal*) |
+| Shape | **Ampere → VM.Standard.A1.Flex** · 2 OCPUs · 12 GB |
+| SSH keys | **Generate a key pair** → **Save Private Key** → **Save Public Key** |
 
-If you installed Crafty, the web panel is at `https://YOUR_SERVER_IP:8443` (accept the self-signed-certificate warning, then change the default password).
+⚠️ The **private key file** is the only key to your machine.
+Lose it = lose the server. Don't rename it, don't delete it.
 
-### Step 6 — mods for every player
+Click **Create**, wait 2–5 min for the green **Running** badge,
+then copy the **Public IP Address** (looks like `129.213.56.123`).
 
-A modded server requires **every player to have exactly the same mods**:
+*"Out of capacity" error?* The region is full — retry later or try another region.
 
-1. Install the [CurseForge app](https://www.curseforge.com/download).
-2. **Minecraft** tab → **Browse Modpacks** → find your server's pack and version → **Install**.
-3. Always launch the game **from CurseForge** (Play button), then connect as above.
+**Step 3 — the installer** *(~10 min)*
 
-### Step 7 — become the server admin
+Double-click `start-windows.bat` (or `bash setup.sh`), pick **Guided mode**, and:
 
-**Join your server once in Minecraft** (this registers your player), then:
+| Question | Recommended | Why |
+|---|---|---|
+| Server type | **Forge** | The classic way to play mods |
+| Minecraft version | **1.20.1** | Most mods available; latest (26.2) also works |
+| RAM | **8 GB** | Leaves 4 GB for the machine itself |
+| Players | **10** | Comfortable for 12 GB |
+| Crafty panel | **Yes** | Manage the server from your browser |
+
+Then it installs everything (Java, server, firewall, auto-restart),
+starts the server, and prints your address.
+
+**Step 4 — open the ports** *(3 min, once)* — see the
+[dedicated guide with the exact clicks](docs/en/vcn-setup.md).
+
+**Step 5 — connect.** Minecraft → *Multiplayer → Add Server* → `YOUR_IP:25565`.
+
+**Step 6 — mods for players.** Everyone installs the
+[CurseForge app](https://www.curseforge.com/download) → same modpack,
+same version → always launch the game from CurseForge.
+
+**Step 7 — make yourself admin.** Join your server **once**, then run:
 
 ```bash
 ./utils/console.sh "op YourName"
 ```
 
-That gives you operator powers in-game (creative mode, teleportation, commands). The same tool sends any server command: `say Hello!`, `time set day`, `list`…
+</details>
 
----
+<details>
+<summary><b>🛠️ Running your server day-to-day</b> — commands cheat sheet</summary>
 
-## ✅ What the installer does for you
+<br>
 
-| Step | Done automatically |
+| I want to… | Run this |
 |---|---|
-| System | Java 21 (ARM64), packages, dedicated unprivileged `minecraft` user |
-| Server | Vanilla / Forge / Fabric / modpack engine, optimized config |
-| Performance | JVM flags tuned for Ampere A1 (generational ZGC, 8 GB cap) |
-| Firewall | iptables rules inserted before Oracle's REJECT (**ufw is forbidden on OCI**) |
-| Web panel | Crafty Controller via Docker Compose (optional) |
-| Boot | systemd service: auto-start + crash restart |
-| Admin | hot backups, restore, monitoring, whitelist, console |
-
-## 🛠️ Managing your server
-
-| Task | Command |
-|---|---|
-| Send a game command / op yourself | `./utils/console.sh "op YourName"` |
-| Backup (hot, with rotation) | `./utils/backup.sh` (keep more: `KEEP=14 ./utils/backup.sh`) |
+| Send a game command (make someone admin, set daytime…) | `./utils/console.sh "op YourName"` |
+| Back up the world | `./utils/backup.sh` |
 | Restore a backup | `./utils/restore.sh` |
-| Live stats (CPU, RAM, players, TPS) | `./utils/monitor.sh` |
-| Update engine / Forge / modpack | `./utils/update.sh` |
-| Harden the VM (SSH, fail2ban) | `./security/hardening.sh` |
-| Manage the whitelist | `./security/whitelist_manager.sh add Name` |
-| Remove everything | `./uninstall.sh` |
+| See CPU / RAM / players | `./utils/monitor.sh` |
+| Update Minecraft, Forge or the modpack | `./utils/update.sh` |
+| Lock the server to invited players | `./security/whitelist_manager.sh add Name` |
+| Tighten security (recommended after setup) | `./security/hardening.sh` |
+| Remove everything cleanly | `./uninstall.sh` |
 
-## 🔧 Troubleshooting
+All of them are re-runnable — they fix rather than break.
 
-| Symptom | Most likely fix |
+</details>
+
+<details>
+<summary><b>🔧 Something doesn't work?</b> — the 7 most common fixes</summary>
+
+<br>
+
+| Symptom | The fix |
 |---|---|
-| “Connection timed out” | VCN ingress rules missing → [vcn-setup guide](docs/en/vcn-setup.md) |
-| “Connection refused / No route to host” | Server stopped or firewall rule misplaced → [guide](docs/en/troubleshooting.md) |
-| Forge “Could not find or load main class” | Someone launched the jar directly — use the generated `start.sh` |
-| Crash / Out of memory | `-Xmx` above 8 GB — the OS kills Java; keep 8 max |
-| Lag / “Can't keep up!” | Lower `view-distance` to 6, check TPS via `./utils/monitor.sh` |
-| Mod rejection on join | Client and server modpacks differ — same pack, same version |
-| SSH “Permission denied” | Wrong key/IP — the user is always `ubuntu` |
+| **Connection timed out** | The ports aren't open → [3-minute guide](docs/en/vcn-setup.md) |
+| **Connection refused** | Server stopped → `./utils/monitor.sh`, then restart via Crafty or `ssh ubuntu@IP 'sudo systemctl start minecraft'` |
+| **Crash / out of memory** | RAM was raised above 8 GB → put `-Xmx8G` back in `user_jvm_args.txt` and restart |
+| **Lag, "Can't keep up!"** | Lower `view-distance` to 6 in `server.properties`, restart |
+| **Player rejected: mods mismatch** | Client and server run different modpacks → same pack, same version |
+| **SSH "Permission denied"** | Wrong key or IP; the user is always `ubuntu` |
+| **Crafty page won't load** | Check TCP 8443 is open (VCN), then `sudo docker logs crafty_controller` |
 
-Full diagnostic tree: **[docs/en/troubleshooting.md](docs/en/troubleshooting.md)**.
+Full diagnostic tree: [docs/en/troubleshooting.md](docs/en/troubleshooting.md)
 
-## ❓ FAQ
+</details>
 
-- **Is it really free?** Yes — the Always Free resources used here (2 OCPU / 12 GB / 200 GB / 10 TB egress) cost $0/month with no time limit. Your only cost is Minecraft Java (~$30, once).
-- **Why is Oracle so generous?** Customer acquisition — they hope you'll upgrade someday. Nothing is owed while you stay in the free quotas.
-- **How many players?** Vanilla ~15–20; light modpacks 5–10; heavy packs 3–5 on 12 GB.
-- **Does it run when I'm offline?** Yes, 24/7, with auto-restart after crashes.
-- **Can Oracle end the offer?** Theoretically; it has existed since 2018. Your backups (`utils/backup.sh`) are always yours to keep.
-- **Which languages?** The installer speaks **English and French** (auto-detected, `--lang fr|en` to force). Documentation exists in both — see below.
-- **Does it work with the latest Minecraft (26.x)?** Yes — the required Java version is auto-resolved from Mojang's metadata (Java 25 for 26.x, verified with a real 26.2 server boot), and Fabric/Forge builds resolve dynamically (Forge 65.x for 26.2). 1.20.1 stays the default because its mod ecosystem is the richest; pass `--mc-version 26.2` (or answer the wizard) for the latest.
+<details>
+<summary><b>❓ Questions people actually ask</b></summary>
 
-## 🏗️ How it works (technical guarantees)
+<br>
 
-- **Strict local/remote separation** — `setup.sh` runs on your machine and drives the VM over SSH; all provisioning happens on the VM via `deploy/remote_provision.sh`.
-- **Modern Forge bootstrapping** — launched through `@unix_args.txt` (the `java -jar` way has been broken since Forge 1.17), with the recommended build resolved dynamically from Forge's promotions API.
-- **OCI-aware firewall** — Oracle's Ubuntu images end their iptables chain with a global REJECT that neutralizes ufw; rules are inserted directly before it and persisted with `netfilter-persistent`.
-- **Hardened JVM for ARM64** — `-Xms`=`-Xmx` ≤ 8 GB, generational ZGC, AlwaysPreTouch, on OpenJDK 21.
-- **Idempotent everything** — re-run any script without breaking config, duplicating firewall rules or touching existing worlds.
-- **Least privilege** — the server runs as a dedicated `minecraft` system user, never root; Crafty runs isolated in Docker.
+**Is it really free?**
+Yes. The resources used (2 cores, 12 GB RAM, 200 GB disk, 10 TB traffic)
+are part of Oracle's *Always Free* tier — no expiry date, no credit card
+burn. Your only cost ever is Minecraft Java itself (~30 $, once).
 
-## 💻 Compatibility
+**Why does Oracle give this away?**
+Marketing — they hope you'll someday upgrade to paid resources.
+You don't owe them anything while staying inside the free quotas.
+
+**Does it work with the latest Minecraft (26.x)?**
+Yes. The required Java version is auto-detected from Mojang's own metadata
+(Java 25 for 26.x — verified by actually booting a 26.2 server with this
+project's files). Forge and Fabric versions resolve automatically too.
+1.20.1 stays the default simply because it has the most mods.
+
+**How many players?**
+Vanilla: ~15–20. Light modpack: 5–10. Heavy modpack: 3–5.
+
+**Does it run when my computer is off?**
+Yes — it's a cloud machine. 24/7, with automatic crash-restart.
+
+**Can Oracle take it back?**
+The offer has existed since 2018. And your backups (`./utils/backup.sh`)
+download to your computer — your world is always yours.
+
+</details>
+
+<details>
+<summary><b>🏗️ How it works & compatibility</b> — for the curious</summary>
+
+<br>
+
+**Architecture in one sentence:** `setup.sh` runs on your computer and
+drives your cloud machine over SSH; everything heavy happens over there,
+via `deploy/remote_provision.sh`.
+
+Guarantees baked in:
+
+- The server runs as a dedicated `minecraft` user — never as root
+- Modern Forge bootstrapping (`@unix_args.txt`, the only correct way since 1.17)
+- Firewall rules inserted exactly where Oracle's Ubuntu images need them
+  (raw iptables — `ufw` silently fails on Oracle)
+- JVM tuned for the ARM processor (generational ZGC, memory pinned at start)
+- Every script is **idempotent** — re-running fixes, never duplicates
 
 | Layer | Verified against |
 |---|---|
-| Your computer | Windows (Git Bash), macOS (bash 3.2-safe), Linux |
-| The VM | Ubuntu 22.04 / 24.04 LTS, ARM64 (Ampere A1) |
-| Minecraft versions | **1.20.1 → 26.2** — required Java auto-resolved from Mojang metadata (21 for 1.20.x/1.21.x, 25 for 26.x) |
-| Java | OpenJDK 21 or 25 (auto-installed to match the game version; generational ZGC) |
-| Engines | Vanilla (piston-meta), Forge 1.17+ (unix_args + dynamic build), Fabric (meta API) |
-| Panel | Crafty Controller 4 via Docker Compose (with `get.docker.com` fallback) |
-| Tests | 350+ assertions run with `bash tests/run_tests.sh` |
+| Your computer | Windows (Git Bash) · macOS (bash 3.2-safe) · Linux |
+| Cloud machine | Ubuntu 22.04 / 24.04 LTS · ARM64 (Ampere A1) |
+| Minecraft | 1.20.1 → **26.2** (Java 21 or 25 auto-installed to match) |
+| Quality | 370+ automated assertions: `bash tests/run_tests.sh` |
 
-## 📖 Documentation
+</details>
 
-| Document | English | Français |
+<details>
+<summary><b>📚 All documentation</b></summary>
+
+<br>
+
+| Guide | English | Français |
 |---|---|---|
-| Beginner guide | [docs/en/getting-started.md](docs/en/getting-started.md) | [docs/guide-debutant-fr.md](docs/guide-debutant-fr.md) |
-| Open the VCN ports | [docs/en/vcn-setup.md](docs/en/vcn-setup.md) | [docs/oci-vcn-config.md](docs/oci-vcn-config.md) |
-| Troubleshooting | [docs/en/troubleshooting.md](docs/en/troubleshooting.md) | [docs/troubleshooting.md](docs/troubleshooting.md) |
-| Full README | *(this file)* | [README.fr.md](README.fr.md) |
+| Complete beginner guide | [getting-started.md](docs/en/getting-started.md) | [guide-debutant-fr.md](docs/guide-debutant-fr.md) |
+| Opening the ports | [vcn-setup.md](docs/en/vcn-setup.md) | [oci-vcn-config.md](docs/oci-vcn-config.md) |
+| Troubleshooting | [troubleshooting.md](docs/en/troubleshooting.md) | [troubleshooting.md](docs/troubleshooting.md) |
 
-## 🤝 Contributing
+**Contributing** — issues and PRs welcome (new modpacks are just one JSON
+file, and translating the maintenance scripts is a great first PR).
+Run the test suite before submitting.
 
-Issues and PRs welcome: new modpacks (one JSON file in `modpacks/`), doc fixes and **new translations**, optimization ideas. Run `bash tests/run_tests.sh` before opening a PR. The maintenance scripts' UI is currently French — help translating them is especially appreciated.
+**License** — [MIT](LICENSE)
 
-## 📄 License
+</details>
 
-[MIT](LICENSE)
+---
+
+<div align="center">
+
+Made for players who'd rather play than configure. 🎮
+
+</div>

@@ -1,0 +1,12 @@
+{
+  "id": "vanilla-plus",
+  "nom": "Vanilla+ (performance, Fabric)",
+  "description": "Vanilla optimisé + utilitaires légers. Le plus sobre en RAM (4 à 6 Go).",
+  "difficulte": "Très facile",
+  "loader": "fabric",
+  "mc_version": "1.20.1",
+  "ram_recommandee_go": 4,
+  "page_curseforge": "https://www.curseforge.com/minecraft/modpacks",
+  "server_pack_url": "",
+  "instructions": "Peu de packs Fabric fournissent un server pack : vous pouvez aussi choisir le type « Fabric » dans setup.sh puis ajouter les mods serveur manuellement (dossier mods/). Si un server pack existe, collez son URL directe."
+}

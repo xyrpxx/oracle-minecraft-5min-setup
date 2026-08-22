@@ -1,0 +1,12 @@
+{
+  "id": "better-minecraft",
+  "nom": "Better Minecraft [Forge]",
+  "description": "Survie améliorée, environ 150 mods, équilibrée. Idéal pour débuter en moddé.",
+  "difficulte": "Facile",
+  "loader": "forge",
+  "mc_version": "1.20.1",
+  "ram_recommandee_go": 8,
+  "page_curseforge": "https://www.curseforge.com/minecraft/modpacks/better-minecraft-forge",
+  "server_pack_url": "",
+  "instructions": "Ouvrez la page CurseForge, onglet Files, choisissez une version 1.20.1, section Additional Files : téléchargez le fichier « Server Pack » et collez son URL directe dans setup.sh."
+}

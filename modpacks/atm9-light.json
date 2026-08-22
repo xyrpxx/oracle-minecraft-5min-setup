@@ -1,0 +1,12 @@
+{
+  "id": "atm9-light",
+  "nom": "All The Mods 9 (édition allégée)",
+  "description": "Tech + magie, grosse progression. Privilégiez une version light/server pack pour 12 Go de RAM.",
+  "difficulte": "Moyen",
+  "loader": "forge",
+  "mc_version": "1.20.1",
+  "ram_recommandee_go": 8,
+  "page_curseforge": "https://www.curseforge.com/minecraft/modpacks/all-the-mods-9",
+  "server_pack_url": "",
+  "instructions": "Ouvrez la page CurseForge du modpack, onglet Files, section Additional Files d'une version 1.20.1 : téléchargez le « Server Pack » et collez son URL directe dans setup.sh."
+}

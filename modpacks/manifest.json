@@ -1,0 +1,8 @@
+{
+  "commentaire": "Registre des modpacks disponibles. Pour en ajouter un : créez <id>.json ici et ajoutez une entrée dans modpacks.",
+  "modpacks": [
+    { "id": "better-minecraft", "fichier": "better-minecraft.json" },
+    { "id": "atm9-light",       "fichier": "atm9-light.json" },
+    { "id": "vanilla-plus",     "fichier": "vanilla-plus.json" }
+  ]
+}

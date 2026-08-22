@@ -4,12 +4,23 @@ Déployez un **serveur Minecraft moddé** (Forge 1.20.1 / Fabric / Vanilla /
 modpack) sur le **Always Free** d'Oracle Cloud : 2 OCPU ARM, **12 Go de RAM**,
 200 Go de disque, **0 €/mois**, 24h/24 — sans compétence DevOps.
 
-```bash
-./setup.sh
-```
+## 🧒 Première fois de ta vie ? Suis juste ces 3 étapes
+
+1. **Télécharge ce projet** : bouton vert **⟵ Code** en haut à droite →
+   **Download ZIP** → dézippe le dossier (clic droit → Extraire tout).
+2. **Ouvre le dossier obtenu et double-clique sur `start-windows.bat`**
+   (Windows). Le programme te **guide ensuite étape par étape** : création du
+   compte gratuit Oracle, création de la machine, configuration... en français,
+   avec la possibilité d'appuyer sur **Entrée** pour garder les réponses
+   conseillées. (Sur Mac/Linux : ouvre un terminal dans le dossier et lance
+   `bash setup.sh`.)
+3. À la fin, le programme t'affiche **l'adresse de ton serveur** à donner à
+   tes amis, et la dernière manipulation à faire (ouvrir les ports, 3 minutes).
+
+> 🧑‍💻 Déjà à l'aise ? `./setup.sh --mode expert` ou `--help` pour le mode scripté.
 
 > ⚠️ Prérequis : un compte Oracle Cloud et une VM Ubuntu ARM créés
-> (guide complet : [`docs/guide-debutant-fr.md`](docs/guide-debutant-fr.md)),
+> (le **Mode guide** t'accompagne si tu ne les as pas encore),
 > Minecraft **Java Edition**. Après le setup, ouvrez les ports du VCN
 > ([`docs/oci-vcn-config.md`](docs/oci-vcn-config.md), 3 minutes).
 
@@ -39,7 +50,9 @@ Coût réel : Minecraft Java (~30 €, achat unique) + 0 €/mois.
 
 | Script | Rôle |
 |---|---|
-| `setup.sh` | Installation complète (interactive ou `--help` pour le mode scripté) |
+| `setup.sh` | Installation complète (Mode guide interactif, ou `--help` pour le mode scripté) |
+| `start-windows.bat` | **Double-clic** sous Windows : lance l'installation guidée |
+| `utils/console.sh` | Commandes admin en jeu : `./utils/console.sh "op TonPseudo"` |
 | `utils/backup.sh` | Sauvegarde à chaud + rotation (`KEEP=14 ./utils/backup.sh`) |
 | `utils/restore.sh` | Restauration d'une archive |
 | `utils/monitor.sh` | CPU, RAM, disque, joueurs, TPS (`watch -n 5 ./utils/monitor.sh`) |

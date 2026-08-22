@@ -155,3 +155,12 @@ run_ssh() {
         -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
         "${SSH_USER:-ubuntu}@${ORACLE_IP:?ORACLE_IP non définie}" "$@"
 }
+
+# Ouvre une URL dans le navigateur par défaut (silencieux, best effort).
+open_url() {
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*) cmd //c start "" "$1" >/dev/null 2>&1 || return 1 ;;
+        Darwin)               open "$1" >/dev/null 2>&1 || return 1 ;;
+        *)                    xdg-open "$1" >/dev/null 2>&1 || return 1 ;;
+    esac
+}

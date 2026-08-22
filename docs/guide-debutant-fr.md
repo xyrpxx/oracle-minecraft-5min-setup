@@ -1,5 +1,11 @@
 # Guide Débutant — Serveur Minecraft gratuit sur Oracle Cloud
 
+> 🧒 **Tu débutes totalement ?** Tu n'as même pas besoin de lire ce guide
+> d'une traite : télécharge le projet (bouton vert **Code → Download ZIP** sur
+> GitHub), ouvre le dossier, **double-clique sur `start-windows.bat`**
+> (Windows) et choisis le **Mode guide**. Le programme t'explique chaque
+> étape au bon moment. Reviens ici seulement si tu veux comprendre ou dépanner.
+
 ## Sommaire
 1. Introduction
 2. Qu'est-ce qu'un serveur Minecraft ?
@@ -153,6 +159,8 @@ Pensez à la whitelist pour un serveur privé :
 
 | Besoin | Commande |
 |---|---|
+| Devenir admin en jeu (opérateur) | `./utils/console.sh "op TonPseudo"` |
+| Envoyer une commande au serveur | `./utils/console.sh "time set day"` |
 | Sauvegarder | `./utils/backup.sh` |
 | Restaurer | `./utils/restore.sh` |
 | Surveiller (CPU, RAM, joueurs, TPS) | `./utils/monitor.sh` |
@@ -160,6 +168,10 @@ Pensez à la whitelist pour un serveur privé :
 | Sécuriser la VM | `./security/hardening.sh` |
 | Gérer la whitelist | `./security/whitelist_manager.sh` |
 | Tout supprimer | `./uninstall.sh` |
+
+Être **opérateur** (« op ») te donne les super-pouvoirs dans le jeu :
+créatif, téléportation, commandes d'admin. Fais-le au moins pour toi-même
+juste après l'installation : `./utils/console.sh "op TonPseudo"`.
 
 Le serveur redémarre tout seul après un crash ou un reboot de la VM (systemd).
 

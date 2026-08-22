@@ -25,6 +25,14 @@ assert_file_contains utils/restore.sh "Aucune archive"            "garde-fou lis
 assert_file_contains utils/backup.sh "KEEP doit être un entier"   "validation de KEEP (anti-injection)"
 assert_file_contains utils/backup.sh "rien à sauvegarder"         "garde-fou archive vide"
 
+echo "-- console.sh --"
+assert_file_exists utils/console.sh "console.sh présent"
+assert_exit_zero "syntaxe bash valide" bash -n utils/console.sh
+assert_file_contains utils/console.sh "load_server_conf"  "utilise .server.conf"
+assert_file_contains utils/console.sh "rcon_client.py"    "passe par RCON"
+assert_file_contains utils/console.sh "op TonPseudo"      "exemple op dans l'aide"
+assert_file_contains utils/console.sh "time set day"      "exemple de commande jeu"
+
 echo "-- monitor.sh --"
 assert_file_exists utils/monitor.sh "monitor.sh présent"
 assert_exit_zero "syntaxe bash valide" bash -n utils/monitor.sh

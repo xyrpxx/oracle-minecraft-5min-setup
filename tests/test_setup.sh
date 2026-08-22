@@ -17,6 +17,28 @@ assert_file_contains setup.sh "is_valid_url"            "validation stricte de l
 assert_file_contains setup.sh "shell_quote"             "valeurs quotées dans .server.conf (chemins avec espaces)"
 assert_file_not_contains setup.sh '${2,,}'               "pas de syntaxe bash4 (compat macOS bash 3.2)"
 
+echo "-- assistant interactif (accessible débutants) --"
+assert_file_contains setup.sh "Mode guide"              "mode guide pas-à-pas"
+assert_file_contains setup.sh "wizard_account"          "assistant création de compte Oracle"
+assert_file_contains setup.sh "wizard_vm"               "assistant création de la VM"
+assert_file_contains setup.sh "open_url"                "ouverture du navigateur proposée"
+assert_file_contains setup.sh "C'est fait ?"            "attente patiente entre les étapes"
+assert_file_contains setup.sh "op TonPseudo"            "astuce commande op (admin en jeu)"
+assert_file_contains setup.sh "start-windows.bat"       "référence au lanceur Windows"
+
+echo "-- mode guidé/expert scriptable --"
+TMP2="$(mktemp -d)"
+printf 'fake\n' > "${TMP2}/fake.key"
+out="$(bash setup.sh --mode expert --ip 192.0.2.10 --key "${TMP2}/fake.key" --type vanilla \
+      --mc-version 1.20.1 --ram 4 --players 5 --crafty false --modpack none \
+      --yes --dry-run 2>&1)" && rc=0 || rc=1
+assert_equals "0" "$rc" "--mode expert accepté en dry-run"
+bash setup.sh --mode turbo --ip 192.0.2.10 --key "${TMP2}/fake.key" --type vanilla \
+     --mc-version 1.20.1 --ram 4 --players 5 --crafty false --modpack none \
+     --yes --dry-run >/dev/null 2>&1 && rc=0 || rc=1
+assert_equals "1" "$rc" "--mode invalide rejeté"
+rm -rf "${TMP2}"
+
 echo "-- mode simulation (dry-run) --"
 TMP="$(mktemp -d)"
 printf 'fake\n' > "${TMP}/fake.key"

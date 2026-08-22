@@ -9,3 +9,5 @@
 *.template text eol=lf
 *.conf text eol=lf
 *.properties text eol=lf
+# Les fichiers .bat DOIVENT rester en CRLF (syntaxe cmd) — pas de conversion.
+*.bat  -text

@@ -14,14 +14,20 @@ for t in tests/test_*.sh; do
 done
 
 # Test python optionnel (client RCON)
+PYTHON_BIN=""
 if command -v python3 >/dev/null 2>&1; then
-    echo "==> tests/test_rcon.py"
-    if ! python3 tests/test_rcon.py; then
+    PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1 && python --version >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+fi
+if [[ -n "$PYTHON_BIN" ]]; then
+    echo "==> tests/test_rcon.py (${PYTHON_BIN})"
+    if ! "$PYTHON_BIN" tests/test_rcon.py; then
         overall=1
         echo "    [ÉCHEC] tests/test_rcon.py"
     fi
 else
-    echo "==> tests/test_rcon.py (python3 absent — sauté)"
+    echo "==> tests/test_rcon.py (python absent — sauté)"
 fi
 
 if (( overall == 0 )); then

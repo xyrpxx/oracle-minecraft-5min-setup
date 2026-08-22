@@ -23,7 +23,7 @@ done < <(find . -type f -name '*.sh' -not -path './.git/*')
 
 echo "-- fins de ligne LF (pas de CRLF) --"
 while IFS= read -r f; do
-    if grep -qU $'\r' "$f"; then t_fail "CRLF détecté : $f"; else t_pass "LF : $f"; fi
+    if LC_ALL=C grep -q "$(printf '\r')" "$f"; then t_fail "CRLF détecté : $f"; else t_pass "LF : $f"; fi
 done < <(find . -type f \( -name '*.sh' -o -name '*.py' -o -name '*.yml' -o -name '*.json' -o -name '*.template' \) -not -path './.git/*')
 
 echo "-- shellcheck (si installé) --"

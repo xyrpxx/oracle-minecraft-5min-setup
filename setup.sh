@@ -52,7 +52,7 @@ parse_args() {
             --mc-version)  MC_VERSION="$2"; shift 2 ;;
             --ram)         RAM_GB="$2"; shift 2 ;;
             --players)     PLAYERS="$2"; shift 2 ;;
-            --crafty)      INSTALL_CRAFTY="${2,,}"; shift 2 ;;
+            --crafty)      INSTALL_CRAFTY="$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')"; shift 2 ;;
             --modpack)     MODPACK="$2"; shift 2 ;;
             --pack-url)    PACK_URL="$2"; shift 2 ;;
             --yes)         ASSUME_YES="true"; shift ;;
@@ -203,8 +203,8 @@ ask_server_config() {
         info "Détails : docs/guide-debutant-fr.md (section modpacks)."
         while true; do
             read -r -p "→ URL du server pack (.zip) : " PACK_URL
-            [[ "$PACK_URL" == http* ]] && break
-            warn "URL invalide (doit commencer par http)"
+            is_valid_url "$PACK_URL" && break
+            warn "URL invalide (URL http(s) directe, sans espaces ni caractères spéciaux)."
         done
     fi
 }
@@ -222,7 +222,7 @@ validate_non_interactive_config() {
     [[ "$INSTALL_CRAFTY" == "true" || "$INSTALL_CRAFTY" == "false" ]] || die "--crafty doit valoir true ou false"
     if [[ "$SERVER_TYPE" == "modpack" ]]; then
         modpack_id_exists "$MODPACK" "${SCRIPT_DIR}/modpacks/manifest.json" || die "Modpack inconnu : $MODPACK"
-        [[ "$PACK_URL" == http* ]] || die "--pack-url requis pour un modpack"
+        is_valid_url "$PACK_URL" || die "--pack-url requis pour un modpack (URL http(s) directe valide)"
     fi
 }
 
@@ -279,15 +279,16 @@ execute_remote_provision() {
 }
 
 save_server_conf() {
+    # shell_quote : les chemins contenant espaces/quotes restent sourçables.
     cat > "$CONF_FILE" <<EOF
 # Généré par setup.sh — configuration locale (ne pas versionner)
-ORACLE_IP=${ORACLE_IP}
-SSH_KEY_PATH=${SSH_KEY_PATH}
-SSH_USER=${SSH_USER}
-SERVER_TYPE=${SERVER_TYPE}
-MC_VERSION=${MC_VERSION}
-RAM_GB=${RAM_GB}
-MODPACK=${MODPACK}
+ORACLE_IP=$(shell_quote "$ORACLE_IP")
+SSH_KEY_PATH=$(shell_quote "$SSH_KEY_PATH")
+SSH_USER=$(shell_quote "$SSH_USER")
+SERVER_TYPE=$(shell_quote "$SERVER_TYPE")
+MC_VERSION=$(shell_quote "$MC_VERSION")
+RAM_GB=$(shell_quote "$RAM_GB")
+MODPACK=$(shell_quote "$MODPACK")
 EOF
     chmod 600 "$CONF_FILE" 2>/dev/null || true
     success "Configuration locale sauvegardée dans .server.conf"

@@ -14,7 +14,13 @@ load_server_conf "${SCRIPT_DIR}/.server.conf"
 echo "[restore] Archives disponibles sur la VM :"
 LISTING="$(run_ssh "ls -1t /opt/minecraft/backups/backup-*.tar.gz 2>/dev/null")" \
     || die "Aucune archive trouvée dans /opt/minecraft/backups/."
-mapfile -t ARCHIVES <<< "$LISTING"
+
+# Boucle while portable (compatible macOS bash 3.2)
+ARCHIVES=()
+while IFS= read -r line; do
+    ARCHIVES+=("$line")
+done <<< "$LISTING"
+[[ ${#ARCHIVES[@]} -gt 0 ]] || die "Aucune archive trouvée dans /opt/minecraft/backups/."
 
 i=1
 for a in "${ARCHIVES[@]}"; do

@@ -83,9 +83,12 @@ step_system_packages() {
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y -qq \
-        openjdk-21-jre-headless docker.io docker-compose-v2 \
+        openjdk-21-jre-headless \
         netfilter-persistent iptables-persistent \
         curl wget jq unzip screen htop python3 >/dev/null
+    # Docker : best effort — certains miroirs 22.04 n'ont pas docker-compose-v2.
+    # step_crafty réinstalle via get.docker.com si 'docker compose' manque.
+    apt-get install -y -qq docker.io docker-compose-v2 >/dev/null 2>&1 || true
     log "Java installé : $(java -version 2>&1 | head -n 1)"
 }
 
@@ -118,6 +121,12 @@ step_firewall() {
 step_crafty() {
     if [[ "$INSTALL_CRAFTY" != "true" ]]; then return 0; fi
     log "Déploiement de Crafty Controller via Docker Compose..."
+    if ! docker compose version >/dev/null 2>&1; then
+        log "Plugin 'docker compose' indisponible — installation via le script officiel Docker..."
+        curl -fsSL https://get.docker.com | sh
+        docker compose version >/dev/null 2>&1 || die "Docker Compose reste indisponible après installation"
+    fi
+    systemctl enable --now docker >/dev/null 2>&1 || true
     mkdir -p "${INSTALL_ROOT}/docker-crafty"
     cp "${STAGING}/deploy/docker-compose.crafty.yml" "${INSTALL_ROOT}/docker-crafty/docker-compose.yml"
     chown -R minecraft:minecraft "${INSTALL_ROOT}/docker-crafty"
@@ -173,7 +182,24 @@ install_engine_vanilla() {
     write_simple_start_script "server.jar"
 }
 
+resolve_forge_build() {
+    # Dernier build « recommended » publié pour cette version MC, avec repli
+    # sur le build épinglé (FORGE_BUILD) si l'API Forge est injoignable.
+    local build=""
+    build="$(curl -fsSL --max-time 20 \
+        https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json \
+        | jq -r --arg v "$MC_VERSION" \
+            '.promos[$v + "-recommended"] // .promos[$v + "-latest"] // empty' 2>/dev/null || true)"
+    if [[ "$build" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        FORGE_BUILD="$build"
+        log "Build Forge résolu dynamiquement : ${FORGE_BUILD}"
+    else
+        log "Résolution Forge impossible — repli sur le build épinglé ${FORGE_BUILD}"
+    fi
+}
+
 install_engine_forge() {
+    resolve_forge_build
     local coords="${MC_VERSION}-${FORGE_BUILD}"
     local base="https://maven.minecraftforge.net/net/minecraftforge/forge/${coords}"
     local installer="forge-${coords}-installer.jar"
@@ -202,6 +228,22 @@ install_modpack_pack() {
     ( cd "$SERVER_DIR" && unzip -oq "$zip" )
     rm -f "$zip"
     chown -R minecraft:minecraft "$SERVER_DIR"
+
+    # Certains server packs s'extraient dans un sous-dossier unique :
+    # on remonte son contenu à la racine du serveur.
+    local sub="" has_engine=0
+    find "${SERVER_DIR}/libraries" -name unix_args.txt -type f 2>/dev/null | grep -q . && has_engine=1
+    [[ -f "${SERVER_DIR}/run.sh" ]] && has_engine=1
+    if (( has_engine == 0 )); then
+        sub="$(find "$SERVER_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+        if [[ -n "$sub" ]] && { [[ -f "${sub}/run.sh" ]] || find "$sub" -name unix_args.txt -type f | grep -q .; }; then
+            log "Server pack extrait dans '${sub##*/}' — remontée du contenu..."
+            ( cd "$sub" && find . -mindepth 1 -maxdepth 1 -exec mv -t "$SERVER_DIR" -- {} + )
+            rmdir "$sub" 2>/dev/null || true
+            chown -R minecraft:minecraft "$SERVER_DIR"
+        fi
+    fi
+
     if find "${SERVER_DIR}/libraries" -name unix_args.txt -type f 2>/dev/null | grep -q .; then
         generate_forge_start_script        # server pack Forge standard
     elif [[ -f "${SERVER_DIR}/run.sh" ]]; then

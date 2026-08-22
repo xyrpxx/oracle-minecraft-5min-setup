@@ -12,6 +12,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "${SCRIPT_DIR}/scripts/lib.sh"
 
 KEEP="${KEEP:-7}"
+# KEEP est interpolé dans une commande SSH distante : entier strict uniquement.
+[[ "$KEEP" =~ ^[0-9]+$ ]] || die "KEEP doit être un entier (ex. KEEP=14 ./utils/backup.sh)."
+(( 10#$KEEP >= 1 )) || die "KEEP doit être supérieur ou égal à 1."
 load_server_conf "${SCRIPT_DIR}/.server.conf"
 
 run_ssh "bash -s -- ${KEEP}" <<'REMOTE'
@@ -45,6 +48,10 @@ for p in world world_nether world_the_end mods config defaultconfigs \
          serverconfig kubejs server.properties whitelist.json user_jvm_args.txt; do
     [[ -e "$p" ]] && ITEMS+=("$p")
 done
+if [[ ${#ITEMS[@]} -eq 0 ]]; then
+    echo "[backup] ERREUR : rien à sauvegarder dans ${SERVER_DIR}." >&2
+    exit 1
+fi
 tar czf "${BACKUP_DIR}/${STAMP}" "${ITEMS[@]}"
 echo "[backup] Archive créée : ${BACKUP_DIR}/${STAMP}"
 

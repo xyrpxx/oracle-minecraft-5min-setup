@@ -50,8 +50,8 @@ case "$SELECTED_CHOICE" in
         info "Collez l'URL DIRECTE du nouveau fichier « Server Pack » (CurseForge)."
         while true; do
             read -r -p "→ URL du server pack (.zip) : " NEW_PACK_URL
-            [[ "$NEW_PACK_URL" == http* ]] && break
-            warn "URL invalide (doit commencer par http)."
+            is_valid_url "$NEW_PACK_URL" && break
+            warn "URL invalide (URL http(s) directe, sans espaces ni caractères spéciaux)."
         done
         warn "Les fichiers du pack (mods/configs) seront remplacés ; le monde est conservé."
         ask_yes_no "Confirmer ?" "n" || { info "Mise à jour annulée."; exit 0; }

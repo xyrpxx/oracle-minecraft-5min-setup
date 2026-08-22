@@ -20,10 +20,10 @@ INSERT_AT="${REJECT_LINE:-1}"
 
 add_rule() { # protocole port
     local proto="$1" port="$2"
-    if iptables -C INPUT -p "$proto" --dport "$port" -m state --state NEW -j ACCEPT 2>/dev/null; then
+    if iptables -C INPUT -p "$proto" --dport "$port" -m conntrack --ctstate NEW -j ACCEPT 2>/dev/null; then
         echo "[iptables] Règle déjà présente : ${proto}/${port}"
     else
-        iptables -I INPUT "$INSERT_AT" -p "$proto" --dport "$port" -m state --state NEW -j ACCEPT
+        iptables -I INPUT "$INSERT_AT" -p "$proto" --dport "$port" -m conntrack --ctstate NEW -j ACCEPT
         echo "[iptables] Règle ajoutée : ${proto}/${port} (position ${INSERT_AT})"
     fi
 }

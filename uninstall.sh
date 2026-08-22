@@ -43,9 +43,9 @@ if [[ -d /opt/minecraft/docker-crafty ]]; then
 fi
 
 echo "[uninstall] Retrait des règles iptables..."
-iptables -D INPUT -p tcp --dport 25565 -m state --state NEW -j ACCEPT 2>/dev/null || true
-iptables -D INPUT -p udp --dport 25565 -m state --state NEW -j ACCEPT 2>/dev/null || true
-iptables -D INPUT -p tcp --dport 8443  -m state --state NEW -j ACCEPT 2>/dev/null || true
+iptables -D INPUT -p tcp --dport 25565 -m conntrack --ctstate NEW -j ACCEPT 2>/dev/null || true
+iptables -D INPUT -p udp --dport 25565 -m conntrack --ctstate NEW -j ACCEPT 2>/dev/null || true
+iptables -D INPUT -p tcp --dport 8443  -m conntrack --ctstate NEW -j ACCEPT 2>/dev/null || true
 netfilter-persistent save 2>/dev/null || true
 
 echo "[uninstall] Suppression des fichiers et de l'utilisateur..."

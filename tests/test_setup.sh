@@ -13,6 +13,9 @@ assert_file_contains setup.sh "remote_provision.sh"     "appelle le provisionnem
 assert_file_contains setup.sh ".server.conf"            "sauvegarde la configuration locale"
 assert_file_contains setup.sh "StrictHostKeyChecking"   "SSH non interactif"
 assert_file_contains setup.sh "docs/oci-vcn-config.md"  "rappel des Ingress Rules VCN"
+assert_file_contains setup.sh "is_valid_url"            "validation stricte de l'URL du server pack"
+assert_file_contains setup.sh "shell_quote"             "valeurs quotées dans .server.conf (chemins avec espaces)"
+assert_file_not_contains setup.sh '${2,,}'               "pas de syntaxe bash4 (compat macOS bash 3.2)"
 
 echo "-- mode simulation (dry-run) --"
 TMP="$(mktemp -d)"

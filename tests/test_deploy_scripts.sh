@@ -45,4 +45,13 @@ assert_file_contains deploy/remote_provision.sh "__RCON_PASSWORD__"            "
 assert_file_contains deploy/remote_provision.sh "__RAM__"                      "injection RAM JVM"
 assert_file_contains deploy/remote_provision.sh "--update-server"              "mode mise à jour"
 
+echo "-- oci_ingress_setup.sh --"
+assert_file_exists deploy/oci_ingress_setup.sh "oci_ingress_setup.sh présent"
+assert_exit_zero "syntaxe bash valide" bash -n deploy/oci_ingress_setup.sh
+assert_file_contains deploy/oci_ingress_setup.sh "oci network security-list update" "mise à jour de la security list"
+assert_file_contains deploy/oci_ingress_setup.sh "25565"   "port Minecraft"
+assert_file_contains deploy/oci_ingress_setup.sh "8443"    "port Crafty"
+assert_file_contains deploy/oci_ingress_setup.sh "0.0.0.0/0" "source ouverte"
+assert_file_contains deploy/oci_ingress_setup.sh "oracle-minecraft-setup" "descriptions identifiant les règles"
+
 finish_tests

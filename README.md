@@ -239,6 +239,7 @@ Full diagnostic tree: **[docs/en/troubleshooting.md](docs/en/troubleshooting.md)
 - **Does it run when I'm offline?** Yes, 24/7, with auto-restart after crashes.
 - **Can Oracle end the offer?** Theoretically; it has existed since 2018. Your backups (`utils/backup.sh`) are always yours to keep.
 - **Which languages?** The installer speaks **English and French** (auto-detected, `--lang fr|en` to force). Documentation exists in both — see below.
+- **Does it work with the latest Minecraft (26.x)?** Yes — the required Java version is auto-resolved from Mojang's metadata (Java 25 for 26.x, verified with a real 26.2 server boot), and Fabric/Forge builds resolve dynamically (Forge 65.x for 26.2). 1.20.1 stays the default because its mod ecosystem is the richest; pass `--mc-version 26.2` (or answer the wizard) for the latest.
 
 ## 🏗️ How it works (technical guarantees)
 
@@ -255,8 +256,9 @@ Full diagnostic tree: **[docs/en/troubleshooting.md](docs/en/troubleshooting.md)
 |---|---|
 | Your computer | Windows (Git Bash), macOS (bash 3.2-safe), Linux |
 | The VM | Ubuntu 22.04 / 24.04 LTS, ARM64 (Ampere A1) |
-| Java | OpenJDK 21 (generational ZGC) |
-| Engines | Vanilla (piston-meta), Forge 1.17+ (unix_args), Fabric (meta API) |
+| Minecraft versions | **1.20.1 → 26.2** — required Java auto-resolved from Mojang metadata (21 for 1.20.x/1.21.x, 25 for 26.x) |
+| Java | OpenJDK 21 or 25 (auto-installed to match the game version; generational ZGC) |
+| Engines | Vanilla (piston-meta), Forge 1.17+ (unix_args + dynamic build), Fabric (meta API) |
 | Panel | Crafty Controller 4 via Docker Compose (with `get.docker.com` fallback) |
 | Tests | 350+ assertions run with `bash tests/run_tests.sh` |
 

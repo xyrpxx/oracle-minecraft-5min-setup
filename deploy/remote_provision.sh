@@ -78,18 +78,52 @@ parse_args() {
     fi
 }
 
+# Java majeur exigé par la version de Minecraft choisie (métadonnées Mojang).
+# Minecraft 26.x exige Java 25 ; les 1.20.x/1.21.x exigent 17/21. On installe
+# au minimum 21 (ZGC générationnel), sinon la version demandée.
+required_java_major() {
+    local version_url major
+    version_url="$(curl -fsSL --max-time 20 "$MOJANG_MANIFEST" \
+        | jq -r --arg v "$MC_VERSION" '.versions[] | select(.id==$v) | .url' 2>/dev/null || true)"
+    [[ -n "$version_url" && "$version_url" != "null" ]] || { echo 21; return 0; }
+    major="$(curl -fsSL --max-time 20 "$version_url" \
+        | jq -r '.javaVersion.majorVersion // empty' 2>/dev/null || true)"
+    [[ "$major" =~ ^[0-9]+$ ]] || major=17
+    if (( 10#$major <= 21 )); then echo 21; else echo "$major"; fi
+}
+
+# Installe le JDK demandé (idempotent) et l'applique comme java par défaut.
+ensure_java() { # major_voulu
+    local want="$1" cur
+    if java -version >/dev/null 2>&1; then
+        cur="$(java -version 2>&1 | head -n 1 | grep -oE 'version "?[0-9]+' | grep -oE '[0-9]+')"
+        [[ "$cur" =~ ^[0-9]+$ ]] || cur=0
+        if (( 10#$cur >= 10#$want )); then
+            log "Java ${cur} déjà présent (≥ ${want} requis)."
+            return 0
+        fi
+    fi
+    log "Installation de Java ${want} (exigé par Minecraft ${MC_VERSION})..."
+    apt-get install -y -qq "openjdk-${want}-jre-headless" >/dev/null 2>&1 \
+        || die "openjdk-${want} indisponible sur cette Ubuntu alors que Minecraft ${MC_VERSION} exige Java ${want}"
+    # Si plusieurs JDK cohabitent, forcer le bon comme défaut.
+    update-alternatives --set java "/usr/lib/jvm/java-${want}-openjdk-arm64/bin/java" >/dev/null 2>&1 || true
+}
+
 step_system_packages() {
     log "Mise à jour du système et installation des paquets..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y -qq \
-        openjdk-21-jre-headless \
         netfilter-persistent iptables-persistent \
         curl wget jq unzip screen htop python3 >/dev/null
     # Docker : best effort — certains miroirs 22.04 n'ont pas docker-compose-v2.
     # step_crafty réinstalle via get.docker.com si 'docker compose' manque.
     apt-get install -y -qq docker.io docker-compose-v2 >/dev/null 2>&1 || true
-    log "Java installé : $(java -version 2>&1 | head -n 1)"
+    # Java ADAPTATIF : 21 pour MC 1.20.x/1.21.x, 25 pour MC 26.x —
+    # résolu depuis les métadonnées officielles Mojang.
+    ensure_java "$(required_java_major)"
+    log "Java en place : $(java -version 2>&1 | head -n 1)"
 }
 
 step_minecraft_user() {
@@ -193,8 +227,10 @@ resolve_forge_build() {
     if [[ "$build" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         FORGE_BUILD="$build"
         log "Build Forge résolu dynamiquement : ${FORGE_BUILD}"
-    else
+    elif [[ "$MC_VERSION" == "1.20.1" ]]; then
         log "Résolution Forge impossible — repli sur le build épinglé ${FORGE_BUILD}"
+    else
+        die "Impossible de résoudre un build Forge pour Minecraft ${MC_VERSION} (Forge le supporte-t-il déjà ? Voir files.minecraftforge.net)"
     fi
 }
 
@@ -287,6 +323,13 @@ apply_server_config() {
     cp "${STAGING}/configs/eula.txt" "${SERVER_DIR}/eula.txt"
     sed "s/__RAM__/${RAM_GB}/g" "${STAGING}/configs/user_jvm_args.txt.template" \
         > "${SERVER_DIR}/user_jvm_args.txt"
+    # JDK 24+ : ZGC générationnel est devenu le défaut et le flag a été retiré
+    # (simple avertissement, mais on nettoie pour des logs lisibles).
+    local java_major
+    java_major="$(java -version 2>&1 | head -n 1 | grep -oE 'version "?[0-9]+' | grep -oE '[0-9]+')"
+    if [[ "$java_major" =~ ^[0-9]+$ ]] && (( 10#$java_major >= 24 )); then
+        sed -i '/ZGenerational/d' "${SERVER_DIR}/user_jvm_args.txt"
+    fi
     chown -R minecraft:minecraft "$SERVER_DIR"
 }
 

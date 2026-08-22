@@ -199,6 +199,7 @@ Arbre de diagnostic complet : **[docs/troubleshooting.md](docs/troubleshooting.m
 - **Ça tourne quand je suis hors ligne ?** Oui, 24/7, avec redémarrage automatique après crash.
 - **Oracle peut-il arrêter l'offre ?** Théoriquement ; elle existe depuis 2018. Tes sauvegardes (`utils/backup.sh`) restent les tiennes.
 - **Quelles langues ?** L'installateur parle **français et anglais** (détection auto, `--lang fr|en` pour forcer). Documentation dans les deux langues — voir ci-dessous.
+- **Ça marche avec le dernier Minecraft (26.x) ?** Oui — la version de Java requise est résolue automatiquement depuis les métadonnées Mojang (Java 25 pour 26.x, vérifié par un vrai démarrage de serveur 26.2), et les builds Fabric/Forge se résolvent dynamiquement (Forge 65.x pour 26.2). 1.20.1 reste la valeur par défaut car son écosystème de mods est le plus riche ; passe `--mc-version 26.2` (ou réponds à l'assistant) pour la dernière version.
 
 ## 🏗️ Garanties techniques
 
@@ -215,8 +216,9 @@ Arbre de diagnostic complet : **[docs/troubleshooting.md](docs/troubleshooting.m
 |---|---|
 | Ton ordinateur | Windows (Git Bash), macOS (compatible bash 3.2), Linux |
 | La VM | Ubuntu 22.04 / 24.04 LTS, ARM64 (Ampere A1) |
-| Java | OpenJDK 21 (ZGC générationnel) |
-| Moteurs | Vanilla (piston-meta), Forge 1.17+ (unix_args), Fabric (meta API) |
+| Versions Minecraft | **1.20.1 → 26.2** — Java requis résolu automatiquement depuis les métadonnées Mojang (21 pour 1.20.x/1.21.x, 25 pour 26.x) |
+| Java | OpenJDK 21 ou 25 (auto-installé selon la version du jeu ; ZGC générationnel) |
+| Moteurs | Vanilla (piston-meta), Forge 1.17+ (unix_args + build dynamique), Fabric (meta API) |
 | Panel | Crafty Controller 4 via Docker Compose (repli `get.docker.com`) |
 | Tests | 350+ assertions via `bash tests/run_tests.sh` |
 

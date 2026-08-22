@@ -15,4 +15,11 @@ assert_file_contains deploy/configure_iptables.sh "8443"                       "
 assert_file_not_contains deploy/configure_iptables.sh "ufw allow"              "aucune commande 'ufw allow'"
 assert_file_not_contains deploy/configure_iptables.sh "ufw enable"             "aucune commande 'ufw enable'"
 
+echo "-- docker-compose.crafty.yml --"
+assert_file_exists deploy/docker-compose.crafty.yml "docker-compose.crafty.yml présent"
+assert_file_contains deploy/docker-compose.crafty.yml "registry.gitlab.com/crafty-controller/crafty-4" "image officielle Crafty 4"
+assert_file_contains deploy/docker-compose.crafty.yml "8443:8443"              "port web Crafty"
+assert_file_contains deploy/docker-compose.crafty.yml "/opt/minecraft/server:/crafty/servers" "serveur MC exposé à Crafty"
+assert_file_contains deploy/docker-compose.crafty.yml "restart: always"        "redémarrage automatique"
+
 finish_tests

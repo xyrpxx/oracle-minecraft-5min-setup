@@ -1,0 +1,21 @@
+# =============================================================================
+# Crafty Controller v4 — panel web d'administration Minecraft.
+# Déployé par remote_provision.sh dans /opt/minecraft/docker-crafty/.
+# L'installation via l'installeur interactif officiel est proscrite (fragile) :
+# on utilise exclusivement le conteneur officiel.
+# =============================================================================
+services:
+  crafty:
+    container_name: crafty_controller
+    image: registry.gitlab.com/crafty-controller/crafty-4:latest
+    restart: always
+    environment:
+      - TZ=Europe/Paris
+    ports:
+      - "8443:8443"   # Interface web (https)
+      - "8123:8123"   # Port interne Crafty
+    volumes:
+      - /opt/minecraft/docker-crafty/backups:/crafty/backups
+      - /opt/minecraft/docker-crafty/logs:/crafty/logs
+      - /opt/minecraft/docker-crafty/app:/crafty/app
+      - /opt/minecraft/server:/crafty/servers

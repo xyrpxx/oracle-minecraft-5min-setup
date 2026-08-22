@@ -1,5 +1,7 @@
 # Ouvrir les ports du réseau Oracle (VCN) — ÉTAPE OBLIGATOIRE
 
+> 🇫🇷 Français | [🇬🇧 English version](en/vcn-setup.md)
+
 ## Pourquoi cette étape est indispensable
 
 Votre VM est protégée par **deux pare-feu** successifs :

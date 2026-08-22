@@ -16,10 +16,11 @@ else
     RED=''; GREEN=''; YELLOW=''; BLUE=''; BOLD=''; NC=''
 fi
 
-info()    { printf '%s\n' "${BLUE}[INFO]${NC} $*"; }
-success() { printf '%s\n' "${GREEN}[OK]${NC} $*"; }
-warn()    { printf '%s\n' "${YELLOW}[ATTENTION]${NC} $*"; }
-die()     { printf '%s\n' "${RED}[ERREUR]${NC} $*" >&2; exit 1; }
+# Tags localisables : les fichiers scripts/lang_*.sh peuvent les surcharger.
+info()    { printf '%s\n' "${BLUE}${INFO_TAG:-[INFO]}${NC} $*"; }
+success() { printf '%s\n' "${GREEN}${OK_TAG:-[OK]}${NC} $*"; }
+warn()    { printf '%s\n' "${YELLOW}${WARN_TAG:-[ATTENTION]}${NC} $*"; }
+die()     { printf '%s\n' "${RED}${ERROR_TAG:-[ERREUR]}${NC} $*" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
 # Validations pures (testées dans tests/test_lib.sh)
@@ -94,7 +95,11 @@ modpack_id_exists() {
 # ask_yes_no "Question ?" [y|n]  → retourne 0 si oui, 1 si non.
 ask_yes_no() {
     local question="$1" default="${2:-n}" prompt response
-    if [[ "$default" == "y" ]]; then prompt="[O/n]"; else prompt="[o/N]"; fi
+    if [[ "$default" == "y" ]]; then
+        prompt="${ASK_YES_NO_PROMPT_Y:-[O/n]}"
+    else
+        prompt="${ASK_YES_NO_PROMPT_N:-[o/N]}"
+    fi
     read -r -p "$question $prompt : " response
     response="${response:-$default}"
     case "$response" in
@@ -127,7 +132,7 @@ ask_choice() {
         i=$((i + 1))
     done
     while true; do
-        read -r -p "→ Choix (1-$n) : " choice
+        read -r -p "→ ${ASK_CHOICE_WORD:-Choix} (1-$n) : " choice
         if [[ "$choice" =~ ^[0-9]+$ ]] && (( 10#$choice >= 1 && 10#$choice <= n )); then
             SELECTED_CHOICE="$choice"
             return 0

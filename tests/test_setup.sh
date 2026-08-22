@@ -18,13 +18,24 @@ assert_file_contains setup.sh "shell_quote"             "valeurs quotées dans .
 assert_file_not_contains setup.sh '${2,,}'               "pas de syntaxe bash4 (compat macOS bash 3.2)"
 
 echo "-- assistant interactif (accessible débutants) --"
-assert_file_contains setup.sh "Mode guide"              "mode guide pas-à-pas"
+assert_file_contains scripts/lang_fr.sh "Mode guide"    "mode guide pas-à-pas (fr)"
 assert_file_contains setup.sh "wizard_account"          "assistant création de compte Oracle"
 assert_file_contains setup.sh "wizard_vm"               "assistant création de la VM"
 assert_file_contains setup.sh "open_url"                "ouverture du navigateur proposée"
-assert_file_contains setup.sh "C'est fait ?"            "attente patiente entre les étapes"
-assert_file_contains setup.sh "op TonPseudo"            "astuce commande op (admin en jeu)"
+assert_file_contains scripts/lang_fr.sh "C'est fait ?"  "attente patiente entre les étapes (fr)"
+assert_file_contains scripts/lang_fr.sh "op TonPseudo"  "astuce commande op (fr)"
 assert_file_contains setup.sh "start-windows.bat"       "référence au lanceur Windows"
+
+echo "-- internationalisation (fr/en) --"
+assert_file_exists scripts/lang_fr.sh "scripts/lang_fr.sh présent"
+assert_file_exists scripts/lang_en.sh "scripts/lang_en.sh présent"
+assert_file_contains setup.sh "--lang"                 "option --lang"
+assert_file_contains setup.sh 'lang_${UI_LANG}'         "chargement dynamique de la langue"
+assert_file_contains scripts/lang_fr.sh "Mode guide"   "mode guide (fr) présent"
+assert_file_contains scripts/lang_fr.sh "C'est fait ?" "attente patiente (fr)"
+assert_file_contains scripts/lang_fr.sh "op TonPseudo" "astuce op (fr)"
+assert_file_contains scripts/lang_en.sh "SIMULATION MODE" "bannière dry-run (en)"
+assert_file_contains scripts/lang_en.sh "op YourName"   "astuce op (en)"
 
 echo "-- mode guidé/expert scriptable --"
 TMP2="$(mktemp -d)"
@@ -42,13 +53,20 @@ rm -rf "${TMP2}"
 echo "-- mode simulation (dry-run) --"
 TMP="$(mktemp -d)"
 printf 'fake\n' > "${TMP}/fake.key"
-out="$(bash setup.sh --ip 192.0.2.10 --key "${TMP}/fake.key" --type vanilla \
+out="$(bash setup.sh --lang fr --ip 192.0.2.10 --key "${TMP}/fake.key" --type vanilla \
       --mc-version 1.20.1 --ram 4 --players 5 --crafty false --modpack none \
       --yes --dry-run 2>&1)" && rc=0 || rc=1
 assert_equals "0" "$rc" "dry-run sort avec code 0"
 assert_contains "$out" "192.0.2.10" "dry-run affiche l'IP"
 assert_contains "$out" "vanilla"    "dry-run affiche le type de serveur"
 assert_contains "$out" "SIMULATION" "dry-run se présente comme simulation"
+
+out_en="$(bash setup.sh --lang en --mode expert --ip 192.0.2.10 --key "${TMP}/fake.key" \
+      --type vanilla --mc-version 1.20.1 --ram 4 --players 5 --crafty false --modpack none \
+      --yes --dry-run 2>&1)" && rc=0 || rc=1
+assert_equals "0" "$rc" "dry-run anglais sort avec code 0"
+assert_contains "$out_en" "SIMULATION MODE" "bannière dry-run en anglais"
+assert_contains "$out_en" "192.0.2.10"      "dry-run EN affiche l'IP"
 if [[ -f "${REPO_ROOT}/.server.conf" ]]; then
     t_fail "dry-run ne doit pas écrire .server.conf"
 else

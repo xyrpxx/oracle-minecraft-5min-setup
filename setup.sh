@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # =============================================================================
-# setup.sh — Orchestrateur LOCAL du déploiement (machine de l'utilisateur).
+# setup.sh — LOCAL deployment orchestrator (runs on the user's machine).
 #
-# Transfère deploy/, configs/, modpacks/ et utils/rcon_client.py vers la VM
-# dans /tmp/setup/, puis exécute deploy/remote_provision.sh via SSH.
-# Aucune commande de provisioning n'est exécutée localement.
+# Transfers deploy/, configs/, modpacks/ and utils/rcon_client.py to the VM
+# into /tmp/setup/, then runs deploy/remote_provision.sh over SSH.
+# No provisioning command is ever executed locally.
 #
-# Usage interactif :  ./setup.sh
-# Usage scripté   :  ./setup.sh --ip IP --key CHEMIN --type forge ... --yes [--dry-run]
+# Languages  : UI_LANG=fr (default on French systems) or en — see --lang.
+# Interactive: ./setup.sh            (guided wizard, perfect for beginners)
+# Scripted   : ./setup.sh --lang en --ip IP --key PATH --type forge ... --yes
 # =============================================================================
 set -euo pipefail
 
-VERSION="3.0"
+VERSION="3.3"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/lib.sh
 . "${SCRIPT_DIR}/scripts/lib.sh"
@@ -19,41 +20,63 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAGING="/tmp/setup"
 CONF_FILE="${SCRIPT_DIR}/.server.conf"
 
-# --- Configuration (remplie par les questions ou les options) ---
+# --- Configuration (filled by questions or options) ---
 ORACLE_IP="" SSH_KEY_PATH="" SSH_USER="ubuntu"
 SERVER_TYPE="vanilla" MC_VERSION="1.20.1" RAM_GB="8"
 PLAYERS="10" INSTALL_CRAFTY="true" MODPACK="none" PACK_URL="-"
 ASSUME_YES="false" DRY_RUN="false" GUIDED_MODE="true"
 
-usage() {
-    cat <<EOF
-Usage : setup.sh [options]
-  (Sans option : assistant interactif en Mode guide, parfait pour débuter.
-   Sous Windows, tu peux aussi simplement double-cliquer sur start-windows.bat)
+# --- Language detection (overridable with --lang fr|en) ---
+detect_language() {
+    case "${LC_ALL:-${LANG:-}}" in
+        fr*) UI_LANG="fr" ;;
+        *)   UI_LANG="en" ;;
+    esac
+}
+detect_language
 
-  --mode <mode>         guide (défaut) | expert
-  --ip <adresse>        IP publique de la VM Oracle
-  --key <chemin>        Clé privée SSH (.key / .pem)
+# shellcheck source=scripts/lang_fr.sh
+# shellcheck source=scripts/lang_en.sh
+load_language() {
+    . "${SCRIPT_DIR}/scripts/lang_${UI_LANG}.sh"
+}
+
+usage() {
+    cat <<'EOF'
+Usage: setup.sh [options]
+  (No option: interactive guided wizard — ideal for beginners.
+   On Windows you can also simply double-click start-windows.bat)
+
+  --lang <fr|en>        Interface language (auto-detected from your system)
+  --mode <guide|expert> guide (default) | expert
+  --ip <address>        Public IP of the Oracle VM
+  --key <path>          SSH private key (.key / .pem)
   --type <type>         vanilla | forge | fabric | modpack
-  --mc-version <ver>    Version Minecraft (défaut : 1.20.1)
-  --ram <Go>            RAM JVM, 2 à 8 (défaut : 8)
-  --players <n>         Joueurs maximum (défaut : 10)
-  --crafty <bool>       Installer le panel Crafty (défaut : true)
-  --modpack <id>        Identifiant du modpack (better-minecraft, atm9-light, vanilla-plus)
-  --pack-url <url>      URL directe du server pack (requis si --type modpack)
-  --yes                 Non interactif (nécessite toutes les options ci-dessus)
-  --dry-run             Simulation : affiche les actions sans rien exécuter
-  -h, --help            Cette aide
+  --mc-version <ver>    Minecraft version (default: 1.20.1)
+  --ram <GB>            JVM RAM, 2 to 8 (default: 8)
+  --players <n>         Max players (default: 10)
+  --crafty <bool>       Install the Crafty panel (default: true)
+  --modpack <id>        Modpack id (better-minecraft, atm9-light, vanilla-plus)
+  --pack-url <url>      Direct server-pack URL (required if --type modpack)
+  --yes                 Non-interactive (requires all options above)
+  --dry-run             Simulation: print actions without executing anything
+  -h, --help            This help
 EOF
 }
 
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --lang)        UI_LANG="$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')"
+                           case "$UI_LANG" in
+                               fr|en) ;;
+                               *) printf '[ERROR] --lang expects fr or en\n' >&2; exit 1 ;;
+                           esac
+                           shift 2 ;;
             --mode)        case "$2" in
                                guide|guided) GUIDED_MODE="true" ;;
                                expert)       GUIDED_MODE="false" ;;
-                               *) die "--mode attend 'guide' ou 'expert'" ;;
+                               *) printf '[ERROR] --mode expects guide or expert\n' >&2; exit 1 ;;
                            esac; shift 2 ;;
             --ip)          ORACLE_IP="$2"; shift 2 ;;
             --key)         SSH_KEY_PATH="$2"; shift 2 ;;
@@ -67,7 +90,7 @@ parse_args() {
             --yes)         ASSUME_YES="true"; shift ;;
             --dry-run)     DRY_RUN="true"; shift ;;
             -h|--help)     usage; exit 0 ;;
-            *) die "Option inconnue : $1 (voir --help)" ;;
+            *) load_language; die "${M_ERR_OPT} $1 (--help)" ;;
         esac
     done
 }
@@ -75,12 +98,12 @@ parse_args() {
 check_local_prerequisites() {
     case "$(uname -s)" in
         Linux|Darwin|MINGW*|MSYS*|CYGWIN*)
-            info "Système détecté : $(uname -s)" ;;
-        *) die "OS non supporté : $(uname -s). Utilisez Linux, macOS ou Git Bash (Windows)." ;;
+            info "$(uname -s)" ;;
+        *) die "${M_ERR_OS} $(uname -s). ${M_ERR_OS_HINT}" ;;
     esac
     local tool
     for tool in ssh scp curl; do
-        command -v "$tool" >/dev/null 2>&1 || die "Outil requis manquant : $tool"
+        command -v "$tool" >/dev/null 2>&1 || die "${M_ERR_TOOL} $tool"
     done
 }
 
@@ -94,128 +117,126 @@ show_expert_checklist() {
     echo
     if ! ask_yes_no "Tout est prêt ?" "y"; then
         echo
-        info "Le guide complet pas à pas : docs/guide-debutant-fr.md"
+        info "Le guide complet pas à pas : docs/guide-debutant-fr.md (docs/en/getting-started.md)"
         exit 0
     fi
 }
 
-# Attend patiemment que l'utilisateur ait fini une étape sur le navigateur.
-wait_until_done() { # conseil
+# Waits patiently until the user has finished a step in their browser.
+wait_until_done() { # tip
     local tip="$1"
     while true; do
-        if ask_yes_no "C'est fait ?" "y"; then return 0; fi
+        if ask_yes_no "$M_WAIT_Q" "y"; then return 0; fi
         echo
-        info "Pas de souci, prends ton temps — le programme attend sagement ici."
-        info "Astuce : $tip"
+        info "$M_WAIT_REASSURE"
+        info "${M_WAIT_TIPPREFIX}${tip}"
     done
 }
 
 wizard_account() {
     echo
     echo "──────────────────────────────────────────────────────────────"
-    echo "  ÉTAPE 1/3 — Ton compte Oracle (à ne faire qu'UNE seule fois)"
+    echo "  ${M_W1_TITLE}"
     echo "──────────────────────────────────────────────────────────────"
-    if ask_yes_no "As-tu déjà un compte Oracle Cloud ?" "n"; then
-        success "Parfait, on passe directement à la suite !"
+    if ask_yes_no "$M_W1_HAVE" "n"; then
+        success "$M_W1_SKIP"
         return 0
     fi
     echo
-    info "Oracle va te PRÊTER gratuitement, à vie, un ordinateur dans le cloud."
-    info "(C'est leur façon d'attirer des clients — et toi, tu en profites.)"
-    info "Pour ça, il te faut un compte. Voici comment faire :"
+    info "$M_W1_L1"
+    info "$M_W1_L2"
+    info "$M_W1_L3"
     echo
-    echo "   1. Va sur https://cloud.oracle.com → bouton « Start for free »"
-    echo "   2. Donne un email + un mot de passe  (note-les quelque part !)"
-    echo "   3. Nom, pays, numéro de téléphone (pour vérifier que tu existes)"
-    echo "   4. Une carte bancaire sera demandée : c'est JUSTE une vérification"
-    echo "      d'identité. Rien n'est prélevé tant que tu restes en gratuit."
-    echo "      Demande l'autorisation d'un adulte si besoin 😉"
-    echo "   5. Région (« Home Region ») : choisis UK South (Londres) ou"
-    echo "      Germany Central (Francfort) — le plus proche = le moins de lag."
-    echo "      ⚠ Ce choix est définitif et l'email de confirmation peut"
-    echo "        mettre 30 minutes à arriver."
+    echo "   $M_W1_S1"
+    echo "   $M_W1_S2"
+    echo "   $M_W1_S3"
+    echo "   $M_W1_S4"
+    echo "   $M_W1_S4b"
+    echo "   $M_W1_S4c"
+    echo "   $M_W1_S5"
+    echo "   $M_W1_S5b"
+    echo "   $M_W1_S5c"
+    echo "   $M_W1_S5d"
     echo
-    if ask_yes_no "Veux-tu que j'ouvre la page d'inscription dans ton navigateur ?" "y"; then
-        open_url "https://cloud.oracle.com" \
-            || info "Impossible d'ouvrir le navigateur — va sur https://cloud.oracle.com"
+    if ask_yes_no "$M_W1_OPENQ" "y"; then
+        open_url "https://cloud.oracle.com" || info "$M_W1_OPENFAIL"
     fi
     echo
-    warn "Si Oracle propose « Upgrade to Pay As You Go » : REFUSE. Reste en gratuit."
-    wait_until_done "l'email de confirmation peut prendre 30 minutes, va boire un verre d'eau 🥤"
+    warn "$M_W1_WARN"
+    wait_until_done "$M_W1_WAITTIP"
 }
 
 wizard_vm() {
     echo
     echo "──────────────────────────────────────────────────────────────"
-    echo "  ÉTAPE 2/3 — Créer la machine (la « VM ») de ton serveur"
+    echo "  ${M_W2_TITLE}"
     echo "──────────────────────────────────────────────────────────────"
-    if ask_yes_no "Ta machine est-elle déjà créée (avec son adresse IP) ?" "n"; then
-        success "Super, on passe à la configuration !"
+    if ask_yes_no "$M_W2_HAVE" "n"; then
+        success "$M_W2_SKIP"
         return 0
     fi
     echo
-    info "Sur cloud.oracle.com : menu ☰ (en haut à gauche) → Compute → Instances"
-    info "→ gros bouton bleu « Create instance ». Remplis EXACTEMENT ceci :"
+    info "$M_W2_L1"
+    info "$M_W2_L2"
     echo
-    echo "   • Name          : ce que tu veux (ex. minecraft)"
-    echo "   • Image [Edit]  : Ubuntu 22.04 ou 24.04   (PAS « Minimal »)"
-    echo "   • Shape [Edit]  : onglet Ampere → VM.Standard.A1.Flex"
-    echo "                     → OCPUs : 2    Memory : 12 GB"
-    echo "   • SSH keys  ⚠ L'ÉTAPE LA PLUS IMPORTANTE ⚠"
-    echo "       1. « Generate a key pair »"
-    echo "       2. « Save Private Key » → garde ce fichier PRÉCIEUSEMENT :"
-    echo "          c'est la clé de ta machine. Perdue = machine perdue !"
-    echo "       3. « Save Public Key »"
-    echo "   • Bouton « Create », puis patiente 2 à 5 minutes..."
+    echo "   $M_W2_S1"
+    echo "   $M_W2_S2"
+    echo "   $M_W2_S3"
+    echo "   $M_W2_S3b"
+    echo "   $M_W2_S4"
+    echo "   $M_W2_S4b"
+    echo "   $M_W2_S4c"
+    echo "   $M_W2_S4d"
+    echo "   $M_W2_S4e"
+    echo "   $M_W2_S5"
     echo
-    if ask_yes_no "Ouvrir la console Oracle dans ton navigateur ?" "y"; then
-        open_url "https://cloud.oracle.com" \
-            || info "Impossible d'ouvrir le navigateur — va sur https://cloud.oracle.com"
+    if ask_yes_no "$M_W2_OPENQ" "y"; then
+        open_url "https://cloud.oracle.com" || info "$M_W2_OPENFAIL"
     fi
-    wait_until_done "attends le statut vert « Running » sur la page de l'instance"
+    wait_until_done "$M_W2_WAITTIP"
     echo
-    success "Note bien le « Public IP Address » affiché (ex. 129.213.56.123) :"
-    success "on va te le demander à l'étape suivante."
+    success "$M_W2_DONE1"
+    success "$M_W2_DONE2"
 }
 
 ask_ip() {
     if [[ "$GUIDED_MODE" == "true" ]]; then
         echo
         echo "──────────────────────────────────────────────────────────────"
-        echo "  ÉTAPE 3/3 — Les informations de ton serveur"
+        echo "  ${M_STEP3_TITLE}"
         echo "──────────────────────────────────────────────────────────────"
-        info "L'IP est l'« adresse postale » de ta machine : console Oracle →"
-        info "Compute → Instances → colonne « Public IP Address »."
-        info "Elle ressemble à : 129.213.56.123"
+        info "$M_IP_HINT1"
+        info "$M_IP_HINT2"
+        info "$M_IP_HINT3"
     fi
     while true; do
-        read -r -p "→ IP publique de ta VM Oracle : " ORACLE_IP
+        read -r -p "$M_IP_PROMPT" ORACLE_IP
         ORACLE_IP="${ORACLE_IP// /}"
         if is_valid_ipv4 "$ORACLE_IP"; then
-            success "IP valide : $ORACLE_IP"
+            success "$M_IP_OK $ORACLE_IP"
             break
         fi
-        warn "Ce n'est pas une adresse IP valide. Exemple : 129.213.56.123"
-        info "(copie-colle la valeur « Public IP Address » de la console Oracle)"
+        warn "$M_IP_BAD"
+        info "$M_IP_WHERE"
     done
 }
 
 ask_ssh_key() {
     echo
     if [[ "$GUIDED_MODE" == "true" ]]; then
-        info "Maintenant, ta CLÉ : le fichier « Save Private Key » téléchargé quand tu"
-        info "as créé la machine. C'est la clé de ta maison 🔑 — on va l'utiliser pour"
-        info "ouvrir la porte de ton serveur. Elle se trouve souvent dans Téléchargements."
+        info "$M_KEY_INTRO_G1"
+        info "$M_KEY_INTRO_G2"
+        info "$M_KEY_INTRO_G3"
     else
-        info "Clé SSH privée téléchargée depuis la console Oracle"
-        info "(fichier du type ssh-key-2026-XX-XX.key ou *.pem, souvent dans Téléchargements)."
+        info "$M_KEY_INTRO_E1"
+        info "$M_KEY_INTRO_E2"
     fi
     local default_found=""
     local candidate
     for candidate in "$HOME"/Downloads/ssh-key-*.key "$HOME"/Downloads/*.pem \
                      "$HOME"/.ssh/id_*.pem "$HOME"/.ssh/id_rsa; do
         if [[ -f "$candidate" ]]; then
-            if ask_yes_no "Clé trouvée : ${candidate} — l'utiliser ?" "y"; then
+            if ask_yes_no "${M_KEY_FOUNDQ} ${candidate} ${M_KEY_USEQ}" "y"; then
                 SSH_KEY_PATH="$candidate"
                 default_found="yes"
                 break
@@ -224,15 +245,15 @@ ask_ssh_key() {
     done
     if [[ -z "$default_found" ]]; then
         while true; do
-            read -r -e -p "→ Chemin de la clé privée SSH : " SSH_KEY_PATH
+            read -r -e -p "$M_KEY_PROMPT" SSH_KEY_PATH
             if [[ -f "$SSH_KEY_PATH" ]]; then
                 break
             fi
-            warn "Fichier introuvable : ${SSH_KEY_PATH}"
+            warn "${M_KEY_NOTFOUND} ${SSH_KEY_PATH}"
         done
     fi
-    chmod 600 "$SSH_KEY_PATH" 2>/dev/null || warn "Impossible d'ajuster les permissions de la clé (ignoré sous Windows)."
-    success "Clé SSH : $SSH_KEY_PATH"
+    chmod 600 "$SSH_KEY_PATH" 2>/dev/null || warn "$M_KEY_PERMWARN"
+    success "$M_KEY_OK $SSH_KEY_PATH"
 }
 
 list_modpack_ids() {
@@ -249,14 +270,14 @@ show_modpack_info() { # id
 
 ask_server_config() {
     echo
-    info "💡 Astuce : pour chaque question, appuie simplement sur ENTRÉE pour"
-    info "   garder la réponse conseillée — c'est ce qu'il y a de plus simple !"
+    info "$M_HINT_ENTER1"
+    info "$M_HINT_ENTER2"
     echo
-    ask_choice "Quel type de serveur Minecraft ?" \
-        "Vanilla (pur, sans mods)" \
-        "Forge (mods classiques — recommandé pour 1.20.1)" \
-        "Fabric (mods modernes, léger)" \
-        "Modpack préconfiguré (server pack CurseForge)"
+    ask_choice "$M_TYPE_Q" \
+        "$M_TYPE_OPT1" \
+        "$M_TYPE_OPT2" \
+        "$M_TYPE_OPT3" \
+        "$M_TYPE_OPT4"
     case "$SELECTED_CHOICE" in
         1) SERVER_TYPE="vanilla" ;;
         2) SERVER_TYPE="forge" ;;
@@ -265,29 +286,29 @@ ask_server_config() {
     esac
 
     while true; do
-        read -r -p "Version Minecraft [1.20.1] : " MC_VERSION
+        read -r -p "$M_VER_PROMPT" MC_VERSION
         MC_VERSION="${MC_VERSION:-1.20.1}"
         is_valid_mc_version "$MC_VERSION" && break
-        warn "Version invalide (formats attendus : 1.20.1, 1.21...)"
+        warn "$M_VER_BAD"
     done
-    success "Version Minecraft : $MC_VERSION"
+    success "$M_VER_OK $MC_VERSION"
 
-    RAM_GB="$(ask_number "RAM pour le serveur en Go (max 8 sur l'Always Free)" 8 2 8)"
-    success "RAM allouée à la JVM : ${RAM_GB} Go"
+    RAM_GB="$(ask_number "$M_RAM_LABEL" 8 2 8)"
+    success "$M_RAM_OK ${RAM_GB} GB"
 
-    PLAYERS="$(ask_number "Nombre maximum de joueurs" 10 1 100)"
+    PLAYERS="$(ask_number "$M_PLAYERS_LABEL" 10 1 100)"
 
-    if ask_yes_no "Installer Crafty Controller (panel web d'administration) ?" "y"; then
+    if ask_yes_no "$M_CRAFTY_Q" "y"; then
         INSTALL_CRAFTY="true"
-        info "Panel accessible après installation sur https://<IP>:8443"
+        info "$M_CRAFTY_INFO1"
     else
         INSTALL_CRAFTY="false"
-        info "Gestion via SSH et les scripts utils/ uniquement."
+        info "$M_CRAFTY_INFO2"
     fi
 
     if [[ "$SERVER_TYPE" == "modpack" ]]; then
         echo
-        info "Modpacks disponibles :"
+        info "$M_MOD_TITLE"
         local ids id
         ids="$(list_modpack_ids)"
         local i=1
@@ -297,59 +318,58 @@ ask_server_config() {
             i=$((i + 1))
         done
         while true; do
-            read -r -p "→ Identifiant du modpack : " MODPACK
+            read -r -p "$M_MOD_PROMPT" MODPACK
             if modpack_id_exists "$MODPACK" "${SCRIPT_DIR}/modpacks/manifest.json"; then
                 break
             fi
-            warn "Modpack inconnu : $MODPACK"
+            warn "$M_MOD_BAD $MODPACK"
         done
         echo
-        info "Dernière chose : l'adresse de téléchargement du « Server Pack »."
-        info "Sur la page CurseForge du modpack : onglet Files → choisis une version"
-        info "${MC_VERSION} → section Additional Files → clic droit sur le fichier"
-        info "« Server Pack » → « Copier l'adresse du lien »."
-        info "Exemple d'URL : https://mediafilez.forgecdn.net/files/1234/567/pack.zip"
+        info "$M_URL_INFO1"
+        info "$M_URL_INFO2"
+        info "$M_URL_INFO3"
+        info "$M_URL_INFO4"
+        info "$M_URL_EXAMPLE"
         while true; do
-            read -r -p "→ URL du server pack (.zip) : " PACK_URL
+            read -r -p "$M_URL_PROMPT" PACK_URL
             is_valid_url "$PACK_URL" && break
-            warn "URL invalide (URL http(s) directe, sans espaces ni caractères spéciaux)."
+            warn "$M_URL_BAD"
         done
     fi
 }
 
 validate_non_interactive_config() {
-    is_valid_ipv4 "$ORACLE_IP" || die "IP invalide : $ORACLE_IP"
+    is_valid_ipv4 "$ORACLE_IP" || die "${M_ERR_IP} $ORACLE_IP"
     case "$SERVER_TYPE" in
         vanilla|forge|fabric|modpack) ;;
-        *) die "Type de serveur invalide : $SERVER_TYPE" ;;
+        *) die "${M_ERR_TYPE} $SERVER_TYPE" ;;
     esac
-    is_valid_mc_version "$MC_VERSION" || die "Version Minecraft invalide : $MC_VERSION"
-    is_valid_ram "$RAM_GB" \
-        || die "RAM invalide : ${RAM_GB} Go (entre 2 et 8 — quota Always Free 12 Go)"
-    [[ -f "$SSH_KEY_PATH" ]] || die "Clé SSH introuvable : $SSH_KEY_PATH"
-    [[ "$INSTALL_CRAFTY" == "true" || "$INSTALL_CRAFTY" == "false" ]] || die "--crafty doit valoir true ou false"
+    is_valid_mc_version "$MC_VERSION" || die "${M_ERR_VER} $MC_VERSION"
+    is_valid_ram "$RAM_GB" || die "${M_ERR_RAM}"
+    [[ -f "$SSH_KEY_PATH" ]] || die "${M_ERR_KEY} $SSH_KEY_PATH"
+    [[ "$INSTALL_CRAFTY" == "true" || "$INSTALL_CRAFTY" == "false" ]] || die "$M_ERR_CRAFTY"
     if [[ "$SERVER_TYPE" == "modpack" ]]; then
-        modpack_id_exists "$MODPACK" "${SCRIPT_DIR}/modpacks/manifest.json" || die "Modpack inconnu : $MODPACK"
-        is_valid_url "$PACK_URL" || die "--pack-url requis pour un modpack (URL http(s) directe valide)"
+        modpack_id_exists "$MODPACK" "${SCRIPT_DIR}/modpacks/manifest.json" || die "${M_ERR_MOD} $MODPACK"
+        is_valid_url "$PACK_URL" || die "$M_ERR_URL"
     fi
 }
 
 confirm_summary() {
     echo
     echo "════════════════════════════════════════════════════════"
-    echo "                 RÉSUMÉ DE CONFIGURATION"
+    echo "$M_SUM_TITLE"
     echo "════════════════════════════════════════════════════════"
-    echo "  IP Oracle      : $ORACLE_IP"
-    echo "  Type serveur   : $SERVER_TYPE"
-    [[ "$SERVER_TYPE" == "modpack" ]] && echo "  Modpack        : $MODPACK"
-    echo "  Version MC     : $MC_VERSION"
-    echo "  RAM JVM        : ${RAM_GB} Go"
-    echo "  Joueurs max    : $PLAYERS"
-    echo "  Panel Crafty   : $INSTALL_CRAFTY"
+    echo "  $M_SUM_IP      : $ORACLE_IP"
+    echo "  $M_SUM_TYPE   : $SERVER_TYPE"
+    [[ "$SERVER_TYPE" == "modpack" ]] && echo "  $M_SUM_MOD    : $MODPACK"
+    echo "  $M_SUM_VER    : $MC_VERSION"
+    echo "  $M_SUM_RAM    : ${RAM_GB} GB"
+    echo "  $M_SUM_PLAYERS: $PLAYERS"
+    echo "  $M_SUM_CRAFTY : $INSTALL_CRAFTY"
     echo "════════════════════════════════════════════════════════"
     echo
     if [[ "$ASSUME_YES" != "true" ]]; then
-        ask_yes_no "Confirmer et lancer l'installation ?" "y" || { info "Installation annulée."; exit 0; }
+        ask_yes_no "$M_CONFIRM_Q" "y" || { info "$M_CANCELLED"; exit 0; }
     fi
 }
 
@@ -359,34 +379,34 @@ setup_ssh() {
 }
 
 test_ssh_connectivity() {
-    info "Test de connexion SSH vers ${SSH_USER}@${ORACLE_IP} ..."
+    info "$M_SSH_TEST ${SSH_USER}@${ORACLE_IP} ..."
     if setup_ssh "true" 2>/dev/null; then
-        success "Connexion réussie — la porte s'ouvre avec ta clé 🔓"
+        success "$M_SSH_OK"
     else
-        die "Impossible d'ouvrir la porte de ta machine 😕 Vérifie dans l'ordre :
-  1. L'IP : c'est bien celle de « Public IP Address » sur la page de ton instance ?
-  2. La clé : c'est bien le fichier « Save Private Key » téléchargé à la création ?
-     (pas le « Public Key », et pas un autre fichier)
-  3. La machine est « Running » (point vert) dans la console Oracle ?
-Aide détaillée : docs/troubleshooting.md (section « Permission denied »)"
+        die "$M_SSH_FAIL_L1
+$M_SSH_FAIL_1
+$M_SSH_FAIL_2
+$M_SSH_FAIL_2b
+$M_SSH_FAIL_3
+$M_SSH_FAIL_HELP"
     fi
 }
 
 transfer_files() {
-    info "Transfert des fichiers vers la VM (${STAGING}) ..."
+    info "$M_TRANSFER_1 (${STAGING}) ..."
     setup_ssh "sudo rm -rf ${STAGING} && mkdir -p ${STAGING}/utils"
     scp -q -r -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=accept-new \
         "${SCRIPT_DIR}/deploy" "${SCRIPT_DIR}/configs" "${SCRIPT_DIR}/modpacks" \
         "${SSH_USER}@${ORACLE_IP}:${STAGING}/"
     scp -q -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=accept-new \
         "${SCRIPT_DIR}/utils/rcon_client.py" "${SSH_USER}@${ORACLE_IP}:${STAGING}/utils/"
-    success "Fichiers transférés."
+    success "$M_TRANSFER_2"
 }
 
 execute_remote_provision() {
-    info "C'est parti ! L'installation dure 5 à 10 minutes et tourne toute seule :"
-    info "ton serveur est en train de naître 🐣 (tu peux aller boire un verre d'eau 🥤)"
-    info "Exécution du provisionnement sur la VM ..."
+    info "$M_PROV_1"
+    info "$M_PROV_2"
+    info "$M_PROV_3"
     setup_ssh "sudo bash ${STAGING}/deploy/remote_provision.sh \
         --ip '${ORACLE_IP}' --server-type '${SERVER_TYPE}' --mc-version '${MC_VERSION}' \
         --ram '${RAM_GB}' --players '${PLAYERS}' --crafty '${INSTALL_CRAFTY}' \
@@ -406,55 +426,55 @@ RAM_GB=$(shell_quote "$RAM_GB")
 MODPACK=$(shell_quote "$MODPACK")
 EOF
     chmod 600 "$CONF_FILE" 2>/dev/null || true
-    success "Configuration locale sauvegardée dans .server.conf"
+    success "$M_CONF_SAVED"
 }
 
 final_banner() {
     echo
-    success "INSTALLATION TERMINÉE ! 🎉"
+    success "$M_FINAL_OK"
     echo
     echo "══════════════════════════════════════════════════════════════"
-    echo "   📍 L'ADRESSE DE TON SERVEUR (envoie-la à tes amis !) :"
+    echo "   $M_FINAL_ADDR"
     echo
     echo "          ${ORACLE_IP}:25565"
     echo "══════════════════════════════════════════════════════════════"
     echo
-    echo "  ET MAINTENANT, 3 choses à savoir :"
+    echo "  $M_FINAL_KNOW"
     echo
-    echo "  1️⃣  IL FAUT OUVRIR LES PORTS (une seule fois, 3 minutes, sinon"
-    echo "     personne ne peut se connecter) → docs/oci-vcn-config.md"
+    echo "  $M_FINAL_1"
+    echo "  $M_FINAL_1b"
     if [[ "$SERVER_TYPE" == "modpack" || "$SERVER_TYPE" == "forge" || "$SERVER_TYPE" == "fabric" ]]; then
-        echo "  2️⃣  Chaque joueur doit installer les MÊMES mods sur SON ordi"
-        echo "     avec l'app CurseForge (même modpack, même version)."
+        echo "  $M_FINAL_2_MOD"
+        echo "  $M_FINAL_2_MODb"
     else
-        echo "  2️⃣  Dans Minecraft : Multijoueur → Ajouter un serveur → colle"
-        echo "     l'adresse ci-dessus → Rejoindre !"
+        echo "  $M_FINAL_2_VAN"
+        echo "  $M_FINAL_2_VANb"
     fi
-    echo "  3️⃣  Pour devenir le chef en jeu (admin), tape :"
-    echo "         ./utils/console.sh \"op TonPseudo\""
+    echo "  $M_FINAL_3"
+    echo "  $M_FINAL_3b"
     echo
-    echo "  Boîte à outils : ./utils/backup.sh (sauvegarde) — ./utils/monitor.sh (surveillance)"
-    echo "  Un problème ?  : docs/troubleshooting.md"
+    echo "  $M_FINAL_TOOLS"
+    echo "  $M_FINAL_HELP"
     echo
     if [[ "$ASSUME_YES" != "true" ]]; then
-        if ask_yes_no "Ouvrir le guide « ouvrir les ports » dans ton navigateur maintenant ?" "y"; then
-            open_url "https://github.com/xyrpxx/oracle-minecraft-5min-setup/blob/main/docs/oci-vcn-config.md" \
-                || info "Lis le fichier docs/oci-vcn-config.md"
+        if ask_yes_no "$M_FINAL_GUIDEQ" "y"; then
+            open_url "https://github.com/xyrpxx/oracle-minecraft-5min-setup/blob/main/docs/en/vcn-setup.md" \
+                || open_url "https://github.com/xyrpxx/oracle-minecraft-5min-setup/blob/main/docs/oci-vcn-config.md" \
+                || info "$M_FINAL_GUIDEFALL"
         fi
-        if [[ "$INSTALL_CRAFTY" == "true" ]] \
-           && ask_yes_no "Ouvrir le panel Crafty (interface web de ton serveur) ?" "y"; then
-            open_url "https://${ORACLE_IP}:8443" \
-                || info "Panel : https://${ORACLE_IP}:8443"
+        if [[ "$INSTALL_CRAFTY" == "true" ]] && ask_yes_no "$M_FINAL_CRAFTYQ" "y"; then
+            open_url "https://${ORACLE_IP}:8443" || info "$M_FINAL_CRAFTYFALL https://${ORACLE_IP}:8443"
         fi
     fi
 }
 
 main() {
     parse_args "$@"
+    load_language
     echo
     echo "=============================================================="
     echo "   Oracle Cloud Minecraft — Auto Setup v${VERSION}"
-    echo "   Forge / Fabric / Vanilla / Modpacks — Always Free (ARM)"
+    echo "   ${M_TAGLINE}"
     echo "=============================================================="
 
     check_local_prerequisites
@@ -462,9 +482,9 @@ main() {
     if [[ "$ASSUME_YES" == "true" ]]; then
         validate_non_interactive_config
     else
-        ask_choice "Bienvenue ! Comment veux-tu procéder ?" \
-            "Mode guide — je t'accompagne étape par étape (recommandé)" \
-            "Mode expert — je sais déjà faire, va droit au but"
+        ask_choice "$M_WELCOME_Q" \
+            "$M_OPT_GUIDE" \
+            "$M_OPT_EXPERT"
         if [[ "$SELECTED_CHOICE" == "1" ]]; then
             GUIDED_MODE="true"
         else
@@ -472,7 +492,7 @@ main() {
         fi
         echo
         if [[ "$GUIDED_MODE" == "true" ]]; then
-            info "C'est parti ! On va faire ça ensemble, sans stress 😊"
+            info "$M_LETS_GO"
             wizard_account
             wizard_vm
         else
@@ -488,8 +508,8 @@ main() {
 
     if [[ "$DRY_RUN" == "true" ]]; then
         echo
-        warn "MODE SIMULATION (--dry-run) : aucune action distante ne sera exécutée."
-        echo "  Commandes qui seraient exécutées :"
+        warn "$M_DRY_WARN"
+        echo "  $M_WOULD_RUN"
         echo "    scp -r deploy configs modpacks + utils/rcon_client.py → ${SSH_USER}@${ORACLE_IP}:${STAGING}/"
         echo "    ssh ${SSH_USER}@${ORACLE_IP} 'sudo bash ${STAGING}/deploy/remote_provision.sh --ip ${ORACLE_IP} --server-type ${SERVER_TYPE} --mc-version ${MC_VERSION} --ram ${RAM_GB} --players ${PLAYERS} --crafty ${INSTALL_CRAFTY} --modpack ${MODPACK} --pack-url ${PACK_URL}'"
         exit 0

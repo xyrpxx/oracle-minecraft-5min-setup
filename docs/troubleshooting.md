@@ -1,5 +1,7 @@
 # Dépannage — problèmes courants
 
+> 🇫🇷 Français | [🇬🇧 English version](en/troubleshooting.md)
+
 Arbre de diagnostic universel : **VCN → iptables → service → Java/mods**.
 Chaque section suit ce fil.
 

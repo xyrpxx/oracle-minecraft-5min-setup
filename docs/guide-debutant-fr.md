@@ -1,5 +1,7 @@
 # Guide Débutant — Serveur Minecraft gratuit sur Oracle Cloud
 
+> 🇫🇷 Français | [🇬🇧 English version](en/getting-started.md)
+
 > 🧒 **Tu débutes totalement ?** Tu n'as même pas besoin de lire ce guide
 > d'une traite : télécharge le projet (bouton vert **Code → Download ZIP** sur
 > GitHub), ouvre le dossier, **double-clique sur `start-windows.bat`**

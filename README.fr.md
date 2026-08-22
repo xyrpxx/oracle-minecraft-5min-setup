@@ -142,6 +142,8 @@ Un serveur moddé exige que **chaque joueur ait exactement les mêmes mods** :
 
 ### Étape 7 — Devenir l'admin du serveur
 
+**Rejoins d'abord ton serveur une fois dans Minecraft** (ça enregistre ton joueur), puis :
+
 ```bash
 ./utils/console.sh "op TonPseudo"
 ```

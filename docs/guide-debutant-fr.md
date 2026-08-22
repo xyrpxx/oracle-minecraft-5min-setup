@@ -172,8 +172,9 @@ Pensez à la whitelist pour un serveur privé :
 | Tout supprimer | `./uninstall.sh` |
 
 Être **opérateur** (« op ») te donne les super-pouvoirs dans le jeu :
-créatif, téléportation, commandes d'admin. Fais-le au moins pour toi-même
-juste après l'installation : `./utils/console.sh "op TonPseudo"`.
+créatif, téléportation, commandes d'admin. Rejoins d'abord ton serveur
+**une fois** dans Minecraft (pour enregistrer ton joueur), puis fais :
+`./utils/console.sh "op TonPseudo"`.
 
 Le serveur redémarre tout seul après un crash ou un reboot de la VM (systemd).
 

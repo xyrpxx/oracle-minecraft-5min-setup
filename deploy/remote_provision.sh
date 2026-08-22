@@ -212,12 +212,27 @@ install_engine_forge() {
 
 install_engine_fabric() {
     log "Installation Fabric ${MC_VERSION}..."
-    local loader server_url
-    loader="$(curl -fsSL "$FABRIC_META" | jq -r '.[0].version')"
-    [[ -n "$loader" && "$loader" != "null" ]] || die "Loader Fabric introuvable"
-    server_url="${FABRIC_META}/${MC_VERSION}/${loader}/server/jar"
-    download_file "$server_url" "${SERVER_DIR}/fabric-server-launch.jar"
-    chown minecraft:minecraft "${SERVER_DIR}/fabric-server-launch.jar"
+    local loader launcher dest="${SERVER_DIR}/fabric-server-launch.jar"
+    # Loader compatible avec CETTE version du jeu (et non le dernier loader
+    # global, qui peut ne plus la supporter).
+    loader="$(curl -fsSL "${FABRIC_META}/${MC_VERSION}" | jq -r '.[0].loader.version')"
+    [[ -n "$loader" && "$loader" != "null" ]] || die "Loader Fabric introuvable pour ${MC_VERSION}"
+    # L'API meta exige une URL à 3 segments (jeu/loader/launcher) : on résout
+    # le launcher dynamiquement, avec repli sur une version épinglée.
+    launcher="$(curl -fsSL --max-time 20 "https://meta.fabricmc.net/v2/versions/installer" \
+        | jq -r '.[0].version' 2>/dev/null || true)"
+    [[ "$launcher" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || launcher="1.1.0"
+    local url_ok=""
+    for u in "${FABRIC_META}/${MC_VERSION}/${loader}/${launcher}/server/jar" \
+             "${FABRIC_META}/${MC_VERSION}/${loader}/1.1.0/server/jar"; do
+        if curl -fsSL --retry 2 -o "$dest" "$u"; then
+            url_ok="$u"
+            break
+        fi
+    done
+    [[ -n "$url_ok" ]] || die "Server jar Fabric introuvable pour ${MC_VERSION} (loader ${loader})"
+    log "Server jar Fabric : ${url_ok}"
+    chown minecraft:minecraft "$dest"
     write_simple_start_script "fabric-server-launch.jar"
 }
 

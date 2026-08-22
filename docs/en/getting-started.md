@@ -169,8 +169,8 @@ Consider the whitelist for a private server:
 | Remove everything | `./uninstall.sh` |
 
 Being an **operator** gives you in-game superpowers: creative mode,
-teleportation, admin commands. Do it for yourself right after installation:
-`./utils/console.sh "op YourName"`.
+teleportation, admin commands. **Join your server once first** (to register
+your player), then: `./utils/console.sh "op YourName"`.
 
 The server restarts by itself after a crash or a VM reboot (systemd).
 

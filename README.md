@@ -182,6 +182,8 @@ A modded server requires **every player to have exactly the same mods**:
 
 ### Step 7 — become the server admin
 
+**Join your server once in Minecraft** (this registers your player), then:
+
 ```bash
 ./utils/console.sh "op YourName"
 ```

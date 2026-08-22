@@ -1,0 +1,16 @@
+# Clés SSH privées — ne JAMAIS versionner
+*.key
+*.pem
+*.ppk
+
+# Configuration locale générée par setup.sh (contient IP + chemin de clé)
+.server.conf
+
+# Sauvegardes et binaires
+*.tar.gz
+*.zip
+backups/
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db

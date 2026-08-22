@@ -40,4 +40,15 @@ assert_file_contains utils/update.sh "--forge-build"       "changement de build 
 assert_file_contains utils/update.sh "--pack-url"          "mise à jour de modpack via server pack"
 assert_file_contains utils/update.sh "is_valid_mc_version" "validation de la version saisie"
 
+echo "-- uninstall.sh --"
+assert_file_exists uninstall.sh "uninstall.sh présent"
+assert_exit_zero "syntaxe bash valide" bash -n uninstall.sh
+assert_file_contains uninstall.sh "load_server_conf"           "utilise .server.conf"
+assert_file_contains uninstall.sh "systemctl disable --now minecraft" "arrêt du service"
+assert_file_contains uninstall.sh "docker compose down"        "arrêt de Crafty"
+assert_file_contains uninstall.sh "iptables -D INPUT"          "retrait des règles pare-feu"
+assert_file_contains uninstall.sh "netfilter-persistent save"  "persistance du retrait"
+assert_file_contains uninstall.sh "userdel minecraft"          "suppression de l'utilisateur dédié"
+assert_file_contains uninstall.sh ".server.conf"               "suppression conf locale"
+
 finish_tests

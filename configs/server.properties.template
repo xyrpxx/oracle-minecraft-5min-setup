@@ -1,0 +1,42 @@
+# =============================================================================
+# server.properties — généré par oracle-minecraft-5min-setup (V3.0)
+# Template copié par remote_provision.sh, puis ajusté (max-players, RCON).
+# =============================================================================
+
+# --- BASE ---
+motd=§l§6Serveur Oracle Cloud §r§f- setup en 5 minutes
+gamemode=survival
+difficulty=hard
+pvp=true
+level-type=minecraft\:normal
+level-seed=
+generate-structures=true
+allow-nether=true
+
+# --- JOUEURS ---
+max-players=20
+white-list=false
+enforce-secure-profile=true
+
+# --- PERFORMANCE (adapté à 2 OCPU ARM) ---
+view-distance=8
+simulation-distance=8
+max-tick-time=60000
+spawn-animals=true
+spawn-monsters=true
+spawn-npcs=true
+
+# --- RÉSEAU ---
+server-port=25565
+enable-query=true
+query.port=25565
+
+# --- RCON (administration locale uniquement ; mot de passe injecté au setup) ---
+enable-rcon=true
+rcon.port=25575
+rcon.password=__RCON_PASSWORD__
+
+# --- DIVERS ---
+spawn-protection=0
+force-gamemode=false
+allow-flight=false

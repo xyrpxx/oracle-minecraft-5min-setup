@@ -1,0 +1,3 @@
+# EULA Minecraft acceptée par l'utilisateur lors de l'exécution de setup.sh
+# (https://aka.ms/MinecraftEULA).
+eula=true

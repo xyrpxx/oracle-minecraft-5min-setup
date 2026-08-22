@@ -1,0 +1,11 @@
+# Arguments JVM — calibrés pour Oracle Cloud Ampere A1 (ARM64) / OpenJDK 21.
+# La mémoire (__RAM__ Go) est injectée par remote_provision.sh.
+# Règle Always Free : maximum 8 Go pour la JVM (12 Go au total sur la VM).
+-Xms__RAM__G
+-Xmx__RAM__G
+-XX:+UnlockExperimentalVMOptions
+-XX:+UseZGC
+-XX:+ZGenerational
+-XX:+AlwaysPreTouch
+-XX:+UseStringDeduplication
+-XX:+DisableExplicitGC

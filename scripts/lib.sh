@@ -65,6 +65,22 @@ is_valid_backup_name() {
     [[ "$1" =~ ^[A-Za-z0-9._-]+$ ]]
 }
 
+# URL directe acceptable pour un téléchargement (http/https, jeu de caractères
+# restreint : aucun espace, quote, point-virgule, $ ou backtick — évite toute
+# injection lors de la construction de commandes SSH distantes).
+is_valid_url() {
+    local re='^https?://[A-Za-z0-9._~:/?#@!&()*+,=%-]+$'
+    [[ "$1" =~ $re ]]
+}
+
+# Échappe une valeur pour un fichier destiné à être sourcé (source-safety) :
+# les chemins Windows/macOS contenant espaces ou quotes restent lisibles.
+shell_quote() {
+    local s="$1"
+    s="${s//\'/\'\\\'\'}"
+    printf "'%s'\n" "$s"
+}
+
 # Vérifie qu'un identifiant de modpack figure dans le registre (sans jq local).
 modpack_id_exists() {
     local id="$1" manifest="${2:-modpacks/manifest.json}"

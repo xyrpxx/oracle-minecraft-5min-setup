@@ -69,4 +69,23 @@ assert_equals "192.0.2.10" "$ORACLE_IP"  "load_server_conf renseigne ORACLE_IP"
 assert_equals "/tmp/faux.key" "$SSH_KEY_PATH" "load_server_conf renseigne SSH_KEY_PATH"
 rm -f "$TMP_CONF"
 
+echo "-- is_valid_url --"
+assert_exit_zero    "URL CurseForge CDN valide"   is_valid_url "https://mediafilez.forgecdn.net/files/1234/5678/server-pack.zip"
+assert_exit_zero    "URL avec query string"       is_valid_url "https://example.com/dl?file=pack.zip&token=abc123"
+assert_exit_zero    "URL http simple"             is_valid_url "http://example.com/pack.zip"
+assert_exit_nonzero "URL ftp refusée"             is_valid_url "ftp://example.com/pack.zip"
+assert_exit_nonzero "URL avec espace refusée"     is_valid_url "https://example.com/pack.zip rm -rf"
+assert_exit_nonzero "URL avec quote refusée"      is_valid_url "https://example.com/a';whoami"
+assert_exit_nonzero "URL avec ; refusée"          is_valid_url "https://example.com/a;reboot"
+assert_exit_nonzero "URL vide refusée"            is_valid_url ""
+assert_exit_nonzero "Pas une URL"                 is_valid_url "not-a-url"
+
+echo "-- shell_quote --"
+TMP_Q="$(mktemp)"
+printf 'K=%s\n' "$(shell_quote "val ue avec espace et quote '")" > "$TMP_Q"
+# shellcheck disable=SC1090
+. "$TMP_Q"
+assert_equals "val ue avec espace et quote '" "$K" "shell_quote roundtrip (source sûr)"
+rm -f "$TMP_Q"
+
 finish_tests

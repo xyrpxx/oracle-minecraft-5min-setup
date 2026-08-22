@@ -36,3 +36,106 @@ is_valid_ipv4() {
     done
     return 0
 }
+
+# Version Minecraft valide : X.Y ou X.Y.Z (ex. 1.20.1).
+is_valid_mc_version() {
+    [[ "$1" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]
+}
+
+# RAM Go valide pour l'Always Free (12 Go au total, 4 Go réservés au système).
+# Maximum strict : 8 Go — au-delà, le Linux OOM Killer fait planter le serveur.
+is_valid_ram() {
+    [[ "$1" =~ ^[0-9]+$ ]] || return 1
+    (( 10#$1 >= 2 && 10#$1 <= 8 ))
+}
+
+# Nombre de joueurs simultanés raisonnable (1 à 100).
+is_valid_player_count() {
+    [[ "$1" =~ ^[0-9]+$ ]] || return 1
+    (( 10#$1 >= 1 && 10#$1 <= 100 ))
+}
+
+# Pseudo Minecraft officiel : 3 à 16 caractères alphanumériques ou _.
+is_valid_mc_username() {
+    [[ "$1" =~ ^[A-Za-z0-9_]{3,16}$ ]]
+}
+
+# Nom de fichier de sauvegarde sûr (pas d'espace, pas de traversée de chemin).
+is_valid_backup_name() {
+    [[ "$1" =~ ^[A-Za-z0-9._-]+$ ]]
+}
+
+# Vérifie qu'un identifiant de modpack figure dans le registre (sans jq local).
+modpack_id_exists() {
+    local id="$1" manifest="${2:-modpacks/manifest.json}"
+    grep -q "\"id\"[[:space:]]*:[[:space:]]*\"$id\"" "$manifest" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
+# Questions interactives (non testées automatiquement)
+# ---------------------------------------------------------------------------
+
+# ask_yes_no "Question ?" [y|n]  → retourne 0 si oui, 1 si non.
+ask_yes_no() {
+    local question="$1" default="${2:-n}" prompt response
+    if [[ "$default" == "y" ]]; then prompt="[O/n]"; else prompt="[o/N]"; fi
+    read -r -p "$question $prompt : " response
+    response="${response:-$default}"
+    case "$response" in
+        [oO]|[oO][uU][iI]|[yY]|[yY][eE][sS]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# ask_number "Question" défaut min max → affiche la valeur saisie sur stdout.
+ask_number() {
+    local question="$1" default="$2" min="$3" max="$4" value
+    while true; do
+        read -r -p "$question [$default] : " value
+        value="${value:-$default}"
+        if [[ "$value" =~ ^[0-9]+$ ]] && (( 10#$value >= min && 10#$value <= max )); then
+            printf '%s\n' "$value"
+            return 0
+        fi
+        warn "Valeur invalide (entier entre $min et $max)."
+    done
+}
+
+# ask_choice "Question ?" "Option 1" "Option 2" ... → remplit SELECTED_CHOICE.
+ask_choice() {
+    local question="$1"; shift
+    local i=1 opt choice n=$#
+    printf '\n%s\n' "$question"
+    for opt in "$@"; do
+        printf '  %d) %s\n' "$i" "$opt"
+        i=$((i + 1))
+    done
+    while true; do
+        read -r -p "→ Choix (1-$n) : " choice
+        if [[ "$choice" =~ ^[0-9]+$ ]] && (( 10#$choice >= 1 && 10#$choice <= n )); then
+            SELECTED_CHOICE="$choice"
+            return 0
+        fi
+        warn "Choix invalide."
+    done
+}
+
+# ---------------------------------------------------------------------------
+# Configuration locale + SSH (utilisés par setup.sh, utils/, security/, uninstall.sh)
+# ---------------------------------------------------------------------------
+
+# Charge .server.conf généré par setup.sh (IP, clé, type de serveur...).
+load_server_conf() {
+    local conf="${1:-./.server.conf}"
+    [[ -f "$conf" ]] || die "Configuration locale introuvable ($conf). Lancez d'abord ./setup.sh."
+    # shellcheck disable=SC1090
+    . "$conf"
+    [[ -n "${ORACLE_IP:-}" && -n "${SSH_KEY_PATH:-}" ]] || die "$conf est incomplet (ORACLE_IP/SSH_KEY_PATH)."
+}
+
+# Invocation SSH standard vers la VM Oracle.
+run_ssh() {
+    ssh -i "${SSH_KEY_PATH:?SSH_KEY_PATH non défini}" \
+        -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
+        "${SSH_USER:-ubuntu}@${ORACLE_IP:?ORACLE_IP non définie}" "$@"
+}

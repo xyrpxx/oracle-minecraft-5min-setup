@@ -27,10 +27,17 @@ COMMON_ARGS=(--ip "${ORACLE_IP}" --ram "${RAM_GB}" --server-type "${SERVER_TYPE}
 
 case "$SELECTED_CHOICE" in
     1)
+        echo
+        info "Versions récentes (les plus récentes d'abord) :"
+        curl -fsSL --max-time 20 https://piston-meta.mojang.com/mc/game/version_manifest.json \
+            | tr -d ' \n\t' \
+            | grep -oE '"id":"[^"]{1,16}","type":"release"' \
+            | sed 's/"id":"//;s/","type":"release"//' | head -n 10 \
+            | awk '{printf "   %2d) %s\n", NR, $0}' || true
         while true; do
             read -r -p "→ Nouvelle version Minecraft (actuelle : ${MC_VERSION}) : " NEW_VERSION
             is_valid_mc_version "$NEW_VERSION" && break
-            warn "Version invalide (ex. 1.20.1 ou 1.21)."
+            warn "Version invalide (ex. 1.20.1 ou 26.2)."
         done
         run_ssh "sudo bash /opt/minecraft/bin/remote_provision.sh \
             ${COMMON_ARGS[*]} --mc-version '${NEW_VERSION}' --modpack none --pack-url -"

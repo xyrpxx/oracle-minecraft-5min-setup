@@ -64,10 +64,11 @@ while true; do
     echo "   3) Sauvegarder le monde"
     echo "   4) Restaurer une sauvegarde"
     echo "   5) Mettre à jour (Minecraft / Forge / modpack)"
-    echo "   6) Gérer la whitelist (serveur privé)"
-    echo "   7) Ouvrir le panel web Crafty (façon Aternos, dans le navigateur)"
-    echo "   8) Renforcer la sécurité de la machine"
-    echo "   9) Installer / réparer le serveur (relance setup.sh)"
+    echo "   6) Installer des mods / un modpack (recherche Modrinth intégrée)"
+    echo "   7) Gérer la whitelist (serveur privé)"
+    echo "   8) Ouvrir le panel web Crafty (façon Aternos, dans le navigateur)"
+    echo "   9) Renforcer la sécurité de la machine"
+    echo "  10) Installer / réparer le serveur (relance setup.sh)"
     echo "   0) Quitter"
     echo
     read -r -p "→ Ton choix : " choice || break
@@ -84,7 +85,8 @@ while true; do
         3) run_action "${SCRIPT_DIR}/utils/backup.sh" ;;
         4) run_action "${SCRIPT_DIR}/utils/restore.sh" ;;
         5) run_action "${SCRIPT_DIR}/utils/update.sh" ;;
-        6) echo
+        6) run_action "${SCRIPT_DIR}/utils/mods.sh" ;;
+        7) echo
            read -r -p "→ Action whitelist (add Pseudo / remove Pseudo / list) : " wl
            if [[ -n "$wl" ]]; then
                # shellcheck disable=SC2086
@@ -93,9 +95,9 @@ while true; do
                warn "Format : add Pseudo, remove Pseudo ou list."
                pause_menu
            fi ;;
-        7) open_crafty ;;
-        8) run_action "${SCRIPT_DIR}/security/hardening.sh" ;;
-        9) echo
+        8) open_crafty ;;
+        9) run_action "${SCRIPT_DIR}/security/hardening.sh" ;;
+        10) echo
            info "Relance de l'installation (sans danger : elle préserve le monde)."
            bash "${SCRIPT_DIR}/setup.sh" || warn "setup.sh s'est arrêté avec une erreur (voir au-dessus)."
            if [[ -f "${SCRIPT_DIR}/.server.conf" ]]; then

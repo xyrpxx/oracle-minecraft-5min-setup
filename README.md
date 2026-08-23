@@ -172,6 +172,7 @@ same version → always launch the game from CurseForge.
 | I want to… | Run this |
 |---|---|
 | **Do everything from one numbered menu** | `bash manage.sh` |
+| Install a mod / modpack by search (Modrinth) | `./utils/mods.sh` |
 | Send a game command (make someone admin, set daytime…) | `./utils/console.sh "op YourName"` |
 | Back up the world | `./utils/backup.sh` |
 | Restore a backup | `./utils/restore.sh` |

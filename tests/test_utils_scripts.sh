@@ -51,6 +51,20 @@ assert_file_contains utils/update.sh "--update-server"     "réutilise remote_pr
 assert_file_contains utils/update.sh "--forge-build"       "changement de build Forge"
 assert_file_contains utils/update.sh "--pack-url"          "mise à jour de modpack via server pack"
 assert_file_contains utils/update.sh "is_valid_mc_version" "validation de la version saisie"
+assert_file_contains utils/update.sh '"type":"release"'    "sélecteur : liste des versions récentes"
+
+echo "-- mods.sh (installation Modrinth façon Aternos) --"
+assert_file_exists utils/mods.sh "mods.sh présent"
+assert_exit_zero "syntaxe bash valide" bash -n utils/mods.sh
+assert_file_contains utils/mods.sh "load_server_conf"            "utilise .server.conf"
+assert_file_contains utils/mods.sh "api.modrinth.com"            "API Modrinth (gratuite, sans clé)"
+assert_file_contains utils/mods.sh "FACETS="                     "facettes de recherche"
+assert_file_contains utils/mods.sh 'KIND="modpack"'              "mode modpack supporté"
+assert_file_contains utils/mods.sh "modrinth.index.json"         "résolution des fichiers .mrpack"
+assert_file_contains utils/mods.sh "unsupported"                 "filtrage client/serveur par fichier"
+assert_file_contains utils/mods.sh "sha1sum"                     "vérification d'intégrité sha1"
+assert_file_contains utils/mods.sh "systemctl restart minecraft" "redémarrage après installation"
+assert_file_not_contains utils/mods.sh "ufw allow"               "aucune commande ufw"
 
 echo "-- uninstall.sh --"
 assert_file_exists uninstall.sh "uninstall.sh présent"

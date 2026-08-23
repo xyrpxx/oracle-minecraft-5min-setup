@@ -157,6 +157,12 @@ A modded server requires **every player** to have exactly the same mods.
 For a custom Forge server: same Minecraft AND Forge versions as the server
 (visible in `./utils/monitor.sh` or the Crafty console).
 
+**Aternos-style alternative — no CurseForge needed:** run `./utils/mods.sh`,
+type keywords, pick a number from the results, done. It searches the free
+Modrinth catalog (mods *and* full modpacks), verifies every file, backs up
+your current mods first, and restarts the server. Switching game versions
+is just as easy: `manage.sh` → 5 lists recent releases to pick from.
+
 ## 11. Inviting your friends
 
 Send them something like (adapt):

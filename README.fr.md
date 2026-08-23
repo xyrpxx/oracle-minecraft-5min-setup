@@ -177,6 +177,7 @@ même version → toujours lancer le jeu depuis CurseForge.
 | Je veux… | Je lance |
 |---|---|
 | **Tout faire depuis un seul menu à numéros** | `bash manage.sh` |
+| Installer un mod / modpack par recherche (Modrinth) | `./utils/mods.sh` |
 | Envoyer une commande de jeu (rendre quelqu'un admin, mettre le jour…) | `./utils/console.sh "op TonPseudo"` |
 | Sauvegarder le monde | `./utils/backup.sh` |
 | Restaurer une sauvegarde | `./utils/restore.sh` |

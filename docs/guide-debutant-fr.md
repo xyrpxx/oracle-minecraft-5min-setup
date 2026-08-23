@@ -161,6 +161,13 @@ Un serveur moddé exige que **chaque joueur** ait exactement les mêmes mods.
 Pour un serveur Forge « custom » : mêmes versions de Minecraft ET de Forge
 que le serveur (visible dans `./utils/monitor.sh` ou la console Crafty).
 
+**Alternative façon Aternos — sans CurseForge :** lance
+`./utils/mods.sh`, tape des mots-clés, choisis un numéro dans les
+résultats, c'est installé. Ça cherche dans le catalogue gratuit Modrinth
+(mods *et* modpacks complets), vérifie chaque fichier, sauvegarde tes mods
+actuels avant, et redémarre le serveur. Changer de version est tout aussi
+simple : `manage.sh` → 5 affiche les versions récentes à choisir.
+
 ## 11. Inviter vos amis
 
 Envoyez-leur ce message (adaptez) :

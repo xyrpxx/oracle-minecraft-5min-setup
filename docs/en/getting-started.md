@@ -129,6 +129,22 @@ self-signed-certificate warning, sign in (credentials shown by Crafty on
 first launch, visible via `ssh ubuntu@IP 'sudo docker logs crafty_controller'`)
 and change the password.
 
+### Plugging your server into Crafty — once, 30 seconds
+
+Crafty is your Aternos-style control panel: start/stop buttons, live console,
+file manager and scheduled backups, all in the browser. The installer puts
+your server where Crafty can see it — you just point Crafty at it once:
+
+1. Open `https://YOUR_VM_IP:8443` and sign in.
+2. Click **New Server** (or **Server Wizard**) → choose **import an
+   existing server**.
+3. Directory: **`servers/server`** — name it whatever you like (e.g.
+   `minecraft`) → **Import**.
+4. Press **Start**. Done: your server now has a web dashboard.
+
+> The exact button names can vary slightly between Crafty versions; what
+> matters is *import* (not create) and the folder `servers/server`.
+
 ## 10. Installing mods on each player's computer
 
 A modded server requires **every player** to have exactly the same mods.

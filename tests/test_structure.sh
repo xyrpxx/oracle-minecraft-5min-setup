@@ -4,7 +4,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "${REPO_ROOT}/tests/helpers.sh"
 
 echo "-- arborescence complète --"
-for f in README.md README.fr.md LICENSE .gitignore .gitattributes setup.sh uninstall.sh start-windows.bat \
+for f in README.md README.fr.md LICENSE .gitignore .gitattributes setup.sh manage.sh uninstall.sh start-windows.bat \
          scripts/lib.sh scripts/lang_fr.sh scripts/lang_en.sh \
          deploy/remote_provision.sh deploy/configure_iptables.sh \
          deploy/docker-compose.crafty.yml deploy/oci_ingress_setup.sh \

@@ -132,6 +132,23 @@ l'avertissement de certificat auto-signé, connectez-vous (identifiants
 affichés par Crafty au premier lancement, visibles via
 `ssh ubuntu@IP 'sudo docker logs crafty_controller'`) et changez le mot de passe.
 
+### Brancher le serveur dans Crafty — une fois, 30 secondes
+
+Crafty est ton tableau de bord façon Aternos : boutons démarrer/arrêter,
+console en direct, gestionnaire de fichiers et sauvegardes planifiées,
+le tout dans le navigateur. L'installateur a déjà déposé le serveur là où
+Crafty peut le voir — il ne reste qu'à le lui indiquer une fois :
+
+1. Ouvre `https://IP_DE_VOTRE_VM:8443` et connecte-toi.
+2. Clique **New Server** (ou **Server Wizard**) → choisis **import an
+   existing server** (importer, pas créer).
+3. Dossier : **`servers/server`** — donne-lui le nom que tu veux (ex.
+   `minecraft`) → **Import**.
+4. Appuie sur **Start**. C'est fini : ton serveur a son tableau de bord web.
+
+> Les libellés exacts peuvent varier légèrement selon la version de Crafty ;
+> l'essentiel : *importer* (pas créer) et le dossier `servers/server`.
+
 ## 10. Installer les mods côté joueur (CurseForge)
 
 Un serveur moddé exige que **chaque joueur** ait exactement les mêmes mods.

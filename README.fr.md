@@ -63,6 +63,13 @@ L'installateur te donne **l'adresse de ton serveur** — la seule chose que
 tes amis auront besoin de connaître. Colle-la dans Minecraft :
 *Multijoueur → Ajouter un serveur*.
 
+**Ensuite, gère tout comme sur Aternos :**
+le panel web dans ton navigateur, ou une seule commande dans le terminal :
+
+```bash
+bash manage.sh
+```
+
 ---
 
 ## 📦 Ce que tu obtiens
@@ -70,7 +77,10 @@ tes amis auront besoin de connaître. Colle-la dans Minecraft :
 - **Une vraie machine dans le cloud** — 2 cœurs, 12 Go de RAM, 200 Go de disque
 - **Toujours allumée** — joue 24h/24, redémarre toute seule après un crash
 - **Des mods** — Forge, Fabric, Vanilla, ou un modpack prêt à l'emploi
-- **Un tableau de bord web** (optionnel) — démarre/arrête et lis les logs comme un pro
+- **Un tableau de bord web comme Aternos** — boutons démarrer/arrêter,
+  console en direct, gestionnaire de fichiers, sauvegardes, dans ton
+  navigateur (branchement unique de 30 secondes)
+- **Un menu unique dans le terminal** — `bash manage.sh` fait tout le reste
 - **Des filets de sécurité** — sauvegarde, restauration, surveillance et mises à jour en une commande
 
 ## 🧾 Ce qu'il te faut
@@ -166,6 +176,7 @@ même version → toujours lancer le jeu depuis CurseForge.
 
 | Je veux… | Je lance |
 |---|---|
+| **Tout faire depuis un seul menu à numéros** | `bash manage.sh` |
 | Envoyer une commande de jeu (rendre quelqu'un admin, mettre le jour…) | `./utils/console.sh "op TonPseudo"` |
 | Sauvegarder le monde | `./utils/backup.sh` |
 | Restaurer une sauvegarde | `./utils/restore.sh` |

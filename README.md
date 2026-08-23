@@ -62,6 +62,13 @@ The wizard opens the right page and shows you exactly what to click.
 The installer hands you your **server address** — the only thing your
 friends ever need. Paste it into Minecraft: *Multiplayer → Add Server*.
 
+**From then on, manage everything like on Aternos:**
+the web panel in your browser, or one command in your terminal:
+
+```bash
+bash manage.sh
+```
+
 ---
 
 ## 📦 What you get
@@ -69,7 +76,9 @@ friends ever need. Paste it into Minecraft: *Multiplayer → Add Server*.
 - **A real machine in the cloud** — 2 CPU cores, 12 GB RAM, 200 GB disk
 - **Always on** — plays 24/7, restarts itself after any crash
 - **Mods** — Forge, Fabric, Vanilla, or a ready-made modpack
-- **A web dashboard** (optional) — start/stop and read logs like a pro
+- **A web dashboard like Aternos** — start/stop buttons, live console,
+  file manager, backups, in your browser (a one-time 30-second setup)
+- **A single terminal menu** — `bash manage.sh` does everything else
 - **Safety nets** — one-command backups, restore, monitoring, updates
 
 ## 🧾 What you need
@@ -162,6 +171,7 @@ same version → always launch the game from CurseForge.
 
 | I want to… | Run this |
 |---|---|
+| **Do everything from one numbered menu** | `bash manage.sh` |
 | Send a game command (make someone admin, set daytime…) | `./utils/console.sh "op YourName"` |
 | Back up the world | `./utils/backup.sh` |
 | Restore a backup | `./utils/restore.sh` |

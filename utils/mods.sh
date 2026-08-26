@@ -19,7 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=scripts/lib.sh
 . "${SCRIPT_DIR}/scripts/lib.sh"
 
-UA="oracle-minecraft-setup/3.6 (https://github.com/xyrpxx/oracle-minecraft-5min-setup)"
+UA="oracle-minecraft-setup/${VERSION} (${GIT_REPO_URL})"
 
 if [[ $# -gt 0 ]]; then
     sed -n 's/^# \{0,1\}//p' "$0" | sed -n '3,14p'
@@ -63,7 +63,7 @@ info "Résultats pour « ${QUERY} » (${KIND} · ${MCV} · ${LOADER}, triés par
 LISTING="$(run_ssh "sudo bash -s -- '${QUERY}' '${KIND}' '${MCV}' '${LOADER}'" <<'REMOTE'
 set -euo pipefail
 Q="$1"; KIND="$2"; MCV="$3"; LOADER="$4"
-curl -fsSL -A "oracle-minecraft-setup/3.6" -G "https://api.modrinth.com/v2/search" \
+curl -fsSL -A "oracle-minecraft-setup/${VERSION}" -G "https://api.modrinth.com/v2/search" \
     --data-urlencode "limit=10" \
     --data-urlencode "index=downloads" \
     --data-urlencode "query=${Q}" \
@@ -96,7 +96,7 @@ ask_yes_no "Installer maintenant ?" "y" || { info "Annulé."; exit 0; }
 run_ssh "sudo bash -s -- '${SLUG}' '${KIND}' '${MCV}' '${LOADER}'" <<'REMOTE'
 set -euo pipefail
 SLUG="$1"; KIND="$2"; MCV="$3"; LOADER="$4"
-UA="oracle-minecraft-setup/3.6"
+UA="oracle-minecraft-setup/${VERSION}"
 S=/opt/minecraft/server
 B=/opt/minecraft/backups
 mkdir -p "$B"

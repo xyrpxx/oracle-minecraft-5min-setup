@@ -11,8 +11,6 @@
 # Scripted   : ./setup.sh --lang en --ip IP --key PATH --type forge ... --yes
 # =============================================================================
 set -euo pipefail
-
-VERSION="3.3"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/lib.sh
 . "${SCRIPT_DIR}/scripts/lib.sh"

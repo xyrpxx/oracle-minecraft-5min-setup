@@ -84,4 +84,15 @@ bash setup.sh --ip 192.0.2.10 --key "${TMP}/fake.key" --type vanilla \
 assert_equals "1" "$rc" "RAM > 8 rejetée"
 
 rm -rf "$TMP"
+
+echo "-- VERSION source unique --"
+ver_lib="$(grep -E '^VERSION=' scripts/lib.sh | head -1 | cut -d= -f2 | tr -d '\"')"
+[[ -n "$ver_lib" ]] && t_pass "VERSION défini dans lib.sh = $ver_lib" || t_fail "VERSION absent de lib.sh"
+ver_setup="$(grep -E '^VERSION=' setup.sh | head -1 | cut -d= -f2 | tr -d '\"')"
+[[ -z "$ver_setup" ]] && t_pass "setup.sh ne redéfinit pas VERSION" \
+    || t_fail "setup.sh redéfinit VERSION (incohérence, devrait lire depuis lib.sh)"
+ua_mods="$(grep -c 'oracle-minecraft-setup/3\.6' utils/mods.sh || true)"
+[[ "$ua_mods" -eq 0 ]] && t_pass "mods.sh ne contient plus de version en dur" \
+    || t_fail "mods.sh contient encore $ua_mods version(s) en dur"
+
 finish_tests

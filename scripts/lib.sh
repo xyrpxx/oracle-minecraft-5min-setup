@@ -3,6 +3,12 @@
 # lib.sh — Fonctions partagées du projet oracle-minecraft-5min-setup
 # Sourcing :
 #   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# =============================================================================
+
+# Source de vérité : version unique du projet, utilisée partout (UA Modrinth,
+# bannière setup.sh, future metadata, etc.). Ne pas redéfinir ailleurs.
+VERSION="3.7"
+GIT_REPO_URL="https://github.com/xyrpxx/oracle-minecraft-5min-setup"
 #   . "${SCRIPT_DIR}/scripts/lib.sh"
 # Contient : couleurs, journalisation, validations pures (unit-testées),
 #            questions interactives et invocation SSH.
@@ -100,12 +106,15 @@ ask_yes_no() {
     else
         prompt="${ASK_YES_NO_PROMPT_N:-[o/N]}"
     fi
-    read -r -p "$question $prompt : " response
-    response="${response:-$default}"
-    case "$response" in
-        [oO]|[oO][uU][iI]|[yY]|[yY][eE][sS]) return 0 ;;
-        *) return 1 ;;
-    esac
+    while true; do
+        read -r -p "$question $prompt : " response
+        response="${response:-$default}"
+        case "$response" in
+            [oO]|[oO][uU][iI]|[yY]|[yY][eE][sS]) return 0 ;;
+            [nN]|[nN][oO][nN]) return 1 ;;
+            *) warn "Réponse invalide. Tapez 'o' (oui) ou 'n' (non)." ;;
+        esac
+    done
 }
 
 # ask_number "Question" défaut min max → affiche la valeur saisie sur stdout.

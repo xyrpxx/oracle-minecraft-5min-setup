@@ -12,16 +12,22 @@ assert_file_contains utils/backup.sh "save-on"         "réactivation des sauveg
 assert_file_contains utils/backup.sh "tar czf"         "archivage tar.gz"
 assert_file_contains utils/backup.sh "load_server_conf" "utilise .server.conf"
 assert_file_contains utils/backup.sh "systemctl stop minecraft" "repli à froid si RCON absent"
+assert_file_contains utils/backup.sh "scp"            "rapatriement local via scp"
+assert_file_contains utils/backup.sh "LOCAL_DIR"      "dossier local configurable (LOCAL_DIR)"
+assert_file_contains utils/backup.sh "minecraft-backups" "défaut ~/minecraft-backups"
 
 echo "-- restore.sh --"
 assert_file_exists utils/restore.sh "restore.sh présent"
 assert_exit_zero "syntaxe bash valide" bash -n utils/restore.sh
 assert_file_contains utils/restore.sh "tar xzf"        "extraction"
 assert_file_contains utils/restore.sh "systemctl stop minecraft" "arrêt avant restauration"
-assert_file_contains utils/restore.sh "systemctl start minecraft" "redémarrage après restauration"
+assert_file_contains utils/restore.sh "systemctl start minecraft" "réinitialisation après restauration"
 assert_file_contains utils/restore.sh "is_valid_backup_name"      "validation du nom d'archive"
 assert_file_not_contains utils/restore.sh "mapfile"               "pas de mapfile (compat macOS bash 3.2)"
 assert_file_contains utils/restore.sh "Aucune archive"            "garde-fou liste vide"
+assert_file_contains utils/restore.sh "pre-restore"    "sauvegarde de sécurité avant restauration"
+assert_file_contains utils/restore.sh "rm -rf"        "nettoyage sélectif avant extraction"
+assert_file_contains utils/restore.sh "tar tzf"       "lecture de la liste tar avant suppression"
 assert_file_contains utils/backup.sh "KEEP doit être un entier"   "validation de KEEP (anti-injection)"
 assert_file_contains utils/backup.sh "rien à sauvegarder"         "garde-fou archive vide"
 
@@ -76,5 +82,22 @@ assert_file_contains uninstall.sh "iptables -D INPUT"          "retrait des règ
 assert_file_contains uninstall.sh "netfilter-persistent save"  "persistance du retrait"
 assert_file_contains uninstall.sh "userdel minecraft"          "suppression de l'utilisateur dédié"
 assert_file_contains uninstall.sh ".server.conf"               "suppression conf locale"
+assert_file_contains uninstall.sh "M_DEL_WORD"                 "confirmation destructive passe par i18n"
+assert_file_contains uninstall.sh "M_DEL_TIP"                  "utilise le prompt i18n"
+assert_file_contains uninstall.sh "lang_en"                    "charge l'anglais"
+
+echo "-- auto-sleep.sh (option Aternos-like) --"
+assert_file_exists utils/auto-sleep.sh "auto-sleep.sh présent"
+assert_exit_zero "syntaxe bash valide" bash -n utils/auto-sleep.sh
+assert_file_contains utils/auto-sleep.sh "list"                          "interroge le nombre de joueurs"
+assert_file_contains utils/auto-sleep.sh "systemctl stop minecraft"     "arrête le serveur quand 0 joueur"
+assert_file_contains utils/auto-sleep.sh "IDLE_MINUTES"                "délai configurable (30 min par défaut)"
+assert_file_contains utils/auto-sleep.sh "ActiveEnterTimestampMonotonic" "mesure le temps d'activité"
+assert_file_contains utils/auto-sleep.sh "systemctl is-active --quiet"  "ne fait rien si déjà éteint"
+
+echo "-- backup.sh (rclone OCI Object Storage optionnel) --"
+assert_file_contains utils/backup.sh "OCI_BUCKET"      "supporte OCI_BUCKET pour upload Object Storage"
+assert_file_contains utils/backup.sh "rclone copyto"   "utilise rclone copyto pour uploader"
+assert_file_contains utils/backup.sh "command -v rclone" "détecte rclone avant usage"
 
 finish_tests

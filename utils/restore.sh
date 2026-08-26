@@ -45,11 +45,43 @@ ask_yes_no "Confirmer la restauration ?" "n" || { info "Restauration annulée.";
 run_ssh "bash -s -- '${ARCHIVE_NAME}'" <<'REMOTE'
 set -euo pipefail
 NAME="$1"
+SERVER_DIR=/opt/minecraft/server
+BACKUP_DIR=/opt/minecraft/backups
+
+# 1. Pré-restauration : on capture l'état actuel en cas de pépin
+PRE_STAMP="pre-restore-$(date +%Y%m%d-%H%M%S).tar.gz"
+ITEMS=()
+cd "$SERVER_DIR"
+for p in world world_nether world_the_end mods config defaultconfigs \
+         serverconfig kubejs server.properties whitelist.json user_jvm_args.txt; do
+    [[ -e "$p" ]] && ITEMS+=("$p")
+done
+if [[ ${#ITEMS[@]} -gt 0 ]]; then
+    tar czf "${BACKUP_DIR}/${PRE_STAMP}" "${ITEMS[@]}" \
+        && echo "[restore] Sauvegarde de sécurité : ${BACKUP_DIR}/${PRE_STAMP}" \
+        || echo "[restore] WARN: pré-restauration échouée, on continue."
+fi
+
+# 2. Arrêt du service
 systemctl stop minecraft
-cd /opt/minecraft/server
-tar xzf "/opt/minecraft/backups/${NAME}"
-chown -R minecraft:minecraft /opt/minecraft/server
+
+# 3. Nettoyage sélectif : on ne supprime QUE les sous-éléments présents
+#    dans l'archive (server.properties, eula.txt, .rcon-credentials préservés)
+#    Cela évite qu'un ancien monde / mod de l'archive ne se mélange à l'existant.
+ARCHIVE="${BACKUP_DIR}/${NAME}"
+map_to_remove="$(tar tzf "$ARCHIVE" 2>/dev/null | awk -F/ '{print $1}' | sort -u)"
+for entry in $map_to_remove; do
+    [[ -e "${SERVER_DIR}/${entry}" ]] && rm -rf -- "${SERVER_DIR:?}/${entry}"
+done
+
+# 4. Extraction propre
+cd "$SERVER_DIR"
+tar xzf "$ARCHIVE"
+
+# 5. Permissions et redémarrage
+chown -R minecraft:minecraft "$SERVER_DIR"
 systemctl start minecraft
+echo "[restore] Restauration terminée."
 REMOTE
 
 info "Attente du redémarrage (jusqu'à 2 minutes)..."

@@ -19,6 +19,11 @@ assert_file_contains manage.sh "setup.sh"                "entrée : réinstaller
 assert_file_contains manage.sh "open_url"                "entrée : ouvrir Crafty (web)"
 assert_file_not_contains manage.sh "ufw allow"           "aucune commande ufw"
 
+echo "-- cohérence du menu (10 entrées, pas 9) --"
+assert_file_contains manage.sh "0 à 10"   "le message d'erreur annonce '0 à 10'"
+assert_file_contains manage.sh "10) Installer"  "l'entrée 10 existe (installer/réparer)"
+assert_file_contains manage.sh "9) Optimisations OCI"  "l'entrée 9 = sous-menu OCI (sécurité, keepalive, auto-stop)"
+
 echo "-- comportement non interactif (choix 0 = quitter) --"
 out="$(printf '0\n' | bash manage.sh 2>&1)" && rc=0 || rc=1
 assert_equals "0" "$rc" "menu sort proprement sur 0"

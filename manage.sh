@@ -48,6 +48,63 @@ open_crafty() {
     pause_menu
 }
 
+# Sous-menu OCI (option 9) : durcir, activer keepalive, auto-sleep.
+oci_submenu() {
+    while true; do
+        echo
+        info "Optimisations OCI (anti-réclamation + sécurité) :"
+        echo "   a) Durcir SSH (PermitRootLogin no, fail2ban, unattended-upgrades)"
+        echo "   b) Activer le keepalive (brûle CPU pour rester au-dessus de 20% p95)"
+        echo "   c) Activer l'auto-stop (arrête le serveur après 30 min sans joueur)"
+        echo "   d) Configurer une alerte Discord sur échec"
+        echo "   q) Retour au menu principal"
+        read -r -p "→ Ton choix : " sub || break
+        case "$sub" in
+            a) run_action "${SCRIPT_DIR}/security/hardening.sh" ;;
+            b) cat <<'TIP'
+[EN] Install on the VM (one-time) :
+   sudo cp security/keepalive.sh /opt/minecraft/bin/
+   sudo tee /etc/systemd/system/keepalive.service >/dev/null <<'EOF'
+[Unit]
+Description=Burn CPU to stay above OCI Always Free idle threshold
+[Service]
+ExecStart=/opt/minecraft/bin/keepalive.sh
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+   sudo systemctl enable --now keepalive.service
+[FR] Installation sur la VM (une seule fois) :
+   (mêmes commandes, voir security/keepalive.sh en tête de fichier)
+TIP
+               pause_menu ;;
+            c) cat <<'TIP'
+[EN] Install on the VM (one-time) :
+   sudo cp utils/auto-sleep.sh /opt/minecraft/bin/
+   sudo tee /etc/systemd/system/auto-sleep.{service,timer} >/dev/null
+   (templates dans le commentaire en tête de utils/auto-sleep.sh)
+   sudo systemctl enable --now auto-sleep.timer
+[FR] Installation sur la VM : voir utils/auto-sleep.sh (commentaire en tête).
+TIP
+               pause_menu ;;
+            d) cat <<'TIP'
+[EN] 1. Create a Discord webhook on your server (Channel → Edit → Integrations).
+     2. On the VM: echo 'DISCORD_WEBHOOK=https://discord.com/api/webhooks/...' \
+                    | sudo tee /opt/minecraft/.env
+     3. sudo cp security/discord-alert@.service /etc/systemd/system/
+     4. sudo systemctl edit minecraft.service → add OnFailure=discord-alert@%n.service
+[FR] 1. Crée un webhook Discord (Salon → Paramètres → Intégrations).
+     2. Sur la VM : echo 'DISCORD_WEBHOOK=...' | sudo tee /opt/minecraft/.env
+     3. sudo cp security/discord-alert@.service /etc/systemd/system/
+     4. sudo systemctl edit minecraft.service → ajoute OnFailure=discord-alert@%n.service
+TIP
+               pause_menu ;;
+            q|0) break ;;
+            *) warn "Choix invalide." ;;
+        esac
+    done
+}
+
 while true; do
     clear 2>/dev/null || true
     echo "════════════════════════════════════════════════════════════"
@@ -55,7 +112,7 @@ while true; do
     if [[ "$HAVE_CONF" == "true" ]]; then
         echo "          Serveur : ${ORACLE_IP}:25565"
     else
-        echo "          (aucun serveur configuré — commence par le 9)"
+        echo "          (aucun serveur configuré — lance ./setup.sh d'abord)"
     fi
     echo "════════════════════════════════════════════════════════════"
     echo
@@ -67,7 +124,7 @@ while true; do
     echo "   6) Installer des mods / un modpack (recherche Modrinth intégrée)"
     echo "   7) Gérer la whitelist (serveur privé)"
     echo "   8) Ouvrir le panel web Crafty (façon Aternos, dans le navigateur)"
-    echo "   9) Renforcer la sécurité de la machine"
+    echo "   9) Optimisations OCI (sécurité, keepalive, auto-stop, alertes Discord)"
     echo "  10) Installer / réparer le serveur (relance setup.sh)"
     echo "   0) Quitter"
     echo
@@ -96,7 +153,7 @@ while true; do
                pause_menu
            fi ;;
         8) open_crafty ;;
-        9) run_action "${SCRIPT_DIR}/security/hardening.sh" ;;
+        9) oci_submenu ;;
         10) echo
            info "Relance de l'installation (sans danger : elle préserve le monde)."
            bash "${SCRIPT_DIR}/setup.sh" || warn "setup.sh s'est arrêté avec une erreur (voir au-dessus)."
@@ -106,7 +163,7 @@ while true; do
            fi
            pause_menu ;;
         0) break ;;
-        *) warn "Choix invalide (0 à 9)." ;;
+        *) warn "Choix invalide (0 à 10)." ;;
     esac
 done
 

@@ -162,6 +162,12 @@ M_FINAL_GUIDEFALL="Read the file docs/en/vcn-setup.md"
 M_FINAL_CRAFTYQ="Open the Crafty panel (your server's web interface)?"
 M_FINAL_CRAFTYFALL="Panel:"
 
+# --- Destructive-action confirmations ---
+M_DEL_WORD="DELETE"
+M_DEL_TIP="Type ${M_DEL_WORD} to confirm:"
+M_DEL_CANCEL="Cancelled."
+M_DEL_LAST_BACKUP="Create a last backup before uninstalling?"
+
 # --- Errors ---
 M_ERR_OS="Unsupported OS:"
 M_ERR_OS_HINT="Use Linux, macOS or Git Bash (Windows)."

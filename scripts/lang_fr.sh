@@ -162,6 +162,12 @@ M_FINAL_GUIDEFALL="Lis le fichier docs/oci-vcn-config.md"
 M_FINAL_CRAFTYQ="Ouvrir le panel Crafty (interface web de ton serveur) ?"
 M_FINAL_CRAFTYFALL="Panel :"
 
+# --- Confirmations de sécurité (destructive) ---
+M_DEL_WORD="SUPPRIMER"
+M_DEL_TIP="Tapez ${M_DEL_WORD} pour confirmer :"
+M_DEL_CANCEL="Annulé."
+M_DEL_LAST_BACKUP="Créer une dernière sauvegarde avant suppression ?"
+
 # --- Erreurs ---
 M_ERR_OS="OS non supporté :"
 M_ERR_OS_HINT="Utilisez Linux, macOS ou Git Bash (Windows)."

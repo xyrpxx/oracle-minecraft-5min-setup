@@ -44,7 +44,7 @@ def detect_lang():
     try:
         import locale
 
-        loc = (locale.getdefaultlocale()[0] or "").lower()
+        loc = (locale.getlocale()[0] or "").lower()
         if loc.startswith("fr"):
             return "fr"
     except Exception:
@@ -494,9 +494,12 @@ class Launcher(tk.Tk):
         self.check_vars = []
         for key in ("cl_parent", "cl_vm", "cl_ip", "cl_ports"):
             var = tk.BooleanVar(value=False)
-            box = ttk.Checkbutton(self.tab_check, text=t[key], variable=var,
-                                  wraplength=480)
-            box.pack(anchor="w", pady=3)
+            # Classic tk.Checkbutton (not ttk): the only one with wraplength,
+            # needed for the long checklist sentences. Justified left.
+            box = tk.Checkbutton(self.tab_check, text=t[key], variable=var,
+                                 wraplength=480, justify="left", anchor="w",
+                                 bg="white", activebackground="white")
+            box.pack(anchor="w", pady=3, fill="x")
             self.check_vars.append(var)
         ttk.Label(self.tab_check, text=t["cl_note"], font=("", 8),
                   foreground="gray", wraplength=480).pack(anchor="w", pady=(8, 0))

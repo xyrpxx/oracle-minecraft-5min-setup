@@ -26,3 +26,9 @@ __pycache__/
 
 # Scratch de session agent (plans locaux, jamais versionnés)
 .zcode/
+
+# Build .exe local (PyInstaller) — jamais versionné
+dist/
+build/
+*.spec
+MinecraftLauncher.exe

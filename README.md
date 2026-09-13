@@ -32,12 +32,18 @@ Green **⟵ Code** button (top right of this page) → **Download ZIP** → unzi
 
 *1 minute*
 
-**Windows** — open the folder and **double-click `start-windows.bat`**
+**Windows, easy way** — open the folder and **double-click
+`launcher\launch-gui.bat`** — a clean window (English/Français) with a
+parent+kid checklist, the install button, and all daily actions. Needs
+Python 3 + Git for Windows (it tells you if one is missing).
+
+**Windows, classic way** — double-click `start-windows.bat` (terminal wizard).
 
 **Mac / Linux** — open a terminal in that folder and run:
 
 ```bash
 bash setup.sh
+# or, with a GUI: python3 launcher/gui_launcher.py
 ```
 
 ### 3 · Follow the wizard
@@ -80,6 +86,7 @@ bash manage.sh
   file manager, backups, in your browser (one-time 30-second auto-import:
   `bash manage.sh` → menu 9 → `e`)
 - **A single terminal menu** — `bash manage.sh` does everything else (English & French)
+- **A clean GUI on Windows** — `launcher\launch-gui.bat`: setup, daily actions, parent+kid checklist (buildable as `.exe`, see `launcher/BUILD-EXE.md`)
 - **Safety nets** — one-command backups, restore, monitoring, updates
 
 ## 🆕 What's new in v3.7

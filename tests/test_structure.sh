@@ -5,6 +5,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "-- arborescence complète --"
 for f in README.md README.fr.md LICENSE .gitignore .gitattributes setup.sh manage.sh uninstall.sh start-windows.bat \
+         launcher/gui_launcher.py launcher/launch-gui.bat launcher/BUILD-EXE.md \
          scripts/lib.sh scripts/lang_fr.sh scripts/lang_en.sh \
          deploy/remote_provision.sh deploy/configure_iptables.sh \
          deploy/docker-compose.crafty.yml deploy/oci_ingress_setup.sh deploy/crafty-seed.sh \
@@ -23,6 +24,8 @@ assert_file_contains start-windows.bat "git-scm.com"  "le lanceur explique où o
 assert_file_contains start-windows.bat "uname -s"     "le lanceur vérifie MSYS via uname (pas WSL)"
 assert_file_contains start-windows.bat "Git for Windows" "le lanceur affiche 'Git for Windows' en anglais"
 assert_file_contains start-windows.bat "Git pour Windows" "le lanceur affiche 'Git pour Windows' en français"
+assert_file_contains launcher/launch-gui.bat "gui_launcher.py" "le lanceur GUI appelle gui_launcher.py"
+assert_file_contains launcher/launch-gui.bat "start-windows.bat" "le lanceur GUI propose le repli classique"
 
 echo "-- syntaxe de tous les scripts bash --"
 while IFS= read -r f; do

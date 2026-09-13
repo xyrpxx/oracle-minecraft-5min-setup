@@ -32,12 +32,19 @@ Bouton vert **⟵ Code** (en haut à droite de cette page) → **Download ZIP** 
 
 *1 minute*
 
-**Windows** — ouvre le dossier et **double-clique sur `start-windows.bat`**
+**Windows, méthode facile** — ouvre le dossier et **double-clique sur
+`launcher\launch-gui.bat`** — une fenêtre claire (français/English) avec une
+checklist parent+enfant, le bouton d'installation et toutes les actions du
+quotidien. Il faut Python 3 + Git pour Windows (il te le dit s'il manque
+quelque chose).
+
+**Windows, méthode classique** — double-clique sur `start-windows.bat` (assistant en terminal).
 
 **Mac / Linux** — ouvre un terminal dans ce dossier et tape :
 
 ```bash
 bash setup.sh
+# ou, avec interface graphique : python3 launcher/gui_launcher.py
 ```
 
 ### 3 · Suis l'assistant
@@ -81,6 +88,7 @@ bash manage.sh
   console en direct, gestionnaire de fichiers, sauvegardes, dans ton
   navigateur (import auto de 30 secondes : `bash manage.sh` → menu 9 → `e`)
 - **Un menu unique dans le terminal** — `bash manage.sh` fait tout le reste (français & anglais)
+- **Une interface graphique claire sur Windows** — `launcher\launch-gui.bat` : installation, actions du quotidien, checklist parent+enfant (compilable en `.exe`, voir `launcher/BUILD-EXE.md`)
 - **Des filets de sécurité** — sauvegarde, restauration, surveillance et mises à jour en une commande
 
 ## 🆕 Quoi de neuf en v3.7

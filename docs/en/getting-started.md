@@ -132,8 +132,16 @@ and change the password.
 ### Plugging your server into Crafty — once, 30 seconds
 
 Crafty is your Aternos-style control panel: start/stop buttons, live console,
-file manager and scheduled backups, all in the browser. The installer puts
-your server where Crafty can see it — you just point Crafty at it once:
+file manager and scheduled backups, all in the browser.
+
+**Fast path (recommended):** `bash manage.sh` → option 9 → option **e**.
+Paste the Crafty admin password when asked (shown by Crafty on first launch:
+`ssh ubuntu@IP 'sudo docker logs crafty_controller'`) — the server is created
+via the Crafty API, no clicking. Then open `https://YOUR_VM_IP:8443` and press
+**Start**.
+
+**Manual fallback** (if the API path fails): the installer puts your server
+where Crafty can see it — you just point Crafty at it once:
 
 1. Open `https://YOUR_VM_IP:8443` and sign in.
 2. Click **New Server** (or **Server Wizard**) → choose **import an

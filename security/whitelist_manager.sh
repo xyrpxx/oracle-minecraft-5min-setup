@@ -36,7 +36,8 @@ fi
 load_server_conf "${SCRIPT_DIR}/.server.conf"
 
 # Active white-list si nécessaire (avec confirmation : redémarrage du serveur).
-WL_STATE="$(run_ssh "grep -E '^white-list=' /opt/minecraft/server/server.properties | cut -d= -f2")"
+# '|| true' : si la ligne manque, on traite comme désactivé (pas de crash set -e).
+WL_STATE="$(run_ssh "grep -E '^white-list=' /opt/minecraft/server/server.properties | cut -d= -f2" || true)"
 if [[ "$ACTION" != "list" && "$WL_STATE" != "true" ]]; then
     warn "La whitelist est désactivée (white-list=false). Pour l'activer, le serveur va redémarrer."
     ask_yes_no "Activer la whitelist maintenant ?" "y" || die "Whitelist désactivée — action impossible."
@@ -50,12 +51,24 @@ case "$ACTION" in
     list)   RCON_CMD="whitelist list" ;;
 esac
 
-run_ssh "sudo bash -c '. /opt/minecraft/server/.rcon-credentials && \
-python3 /opt/minecraft/bin/rcon_client.py 127.0.0.1 \$RCON_PORT \$RCON_PASSWORD \"${RCON_CMD}\"'"
+# La commande RCON voyage en base64 : aucun caractère du pseudo/commande
+# ne peut être réinterprété par le shell distant.
+rcon_remote() { # $1 = commande en clair (déjà validée : allowlist d'actions + pseudo regex)
+    local b64
+    b64="$(printf '%s' "$1" | base64 | tr -d '\n')"
+    run_ssh "sudo bash -s -- '${b64}'" <<'REMOTE'
+set -euo pipefail
+CMD="$(printf '%s' "$1" | base64 -d)"
+# shellcheck disable=SC1091
+. /opt/minecraft/server/.rcon-credentials
+python3 /opt/minecraft/bin/rcon_client.py 127.0.0.1 "$RCON_PORT" "$RCON_PASSWORD" "$CMD"
+REMOTE
+}
+
+rcon_remote "$RCON_CMD"
 
 # Rafraîchit la liste côté serveur après une modification.
 if [[ "$ACTION" != "list" ]]; then
-    run_ssh "sudo bash -c '. /opt/minecraft/server/.rcon-credentials && \
-python3 /opt/minecraft/bin/rcon_client.py 127.0.0.1 \$RCON_PORT \$RCON_PASSWORD \"whitelist reload\"'" >/dev/null
+    rcon_remote "whitelist reload" >/dev/null
     success "Whitelist mise à jour : ${ACTION} ${PLAYER}"
 fi

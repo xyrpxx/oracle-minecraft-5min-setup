@@ -5,6 +5,8 @@
 # iptables se terminant par un REJECT global : ufw est donc INTERDIT (conflit).
 # On insère nos règles AVANT le REJECT, puis on persiste via netfilter-persistent.
 # Idempotent : les règles déjà présentes ne sont pas dupliquées.
+# Périmètre : IPv4 uniquement (iptables). Si le VCN active IPv6 un jour,
+# dupliquer ces règles avec ip6tables.
 # =============================================================================
 set -euo pipefail
 

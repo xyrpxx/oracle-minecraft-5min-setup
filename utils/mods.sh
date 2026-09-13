@@ -60,10 +60,12 @@ FACETS="[[\"project_type:${KIND}\"],[\"versions:${MCV}\"],[\"loaders:${LOADER}\"
 echo
 info "Résultats pour « ${QUERY} » (${KIND} · ${MCV} · ${LOADER}, triés par popularité) :"
 
-LISTING="$(run_ssh "sudo bash -s -- '${QUERY}' '${KIND}' '${MCV}' '${LOADER}'" <<'REMOTE'
+# La version voyage en argument : les heredocs distants 'REMOTE' n'héritent
+# pas des variables locales (VERSION serait unbound sous set -u).
+LISTING="$(run_ssh "sudo bash -s -- '${QUERY}' '${KIND}' '${MCV}' '${LOADER}' '${VERSION}'" <<'REMOTE'
 set -euo pipefail
-Q="$1"; KIND="$2"; MCV="$3"; LOADER="$4"
-curl -fsSL -A "oracle-minecraft-setup/${VERSION}" -G "https://api.modrinth.com/v2/search" \
+Q="$1"; KIND="$2"; MCV="$3"; LOADER="$4"; VER="$5"
+curl -fsSL -A "oracle-minecraft-setup/${VER}" -G "https://api.modrinth.com/v2/search" \
     --data-urlencode "limit=10" \
     --data-urlencode "index=downloads" \
     --data-urlencode "query=${Q}" \
@@ -93,10 +95,10 @@ warn "Le contenu actuel de mods/config sera remplacé si le pack le prévoit"
 warn "(une sauvegarde éclair est faite automatiquement avant)."
 ask_yes_no "Installer maintenant ?" "y" || { info "Annulé."; exit 0; }
 
-run_ssh "sudo bash -s -- '${SLUG}' '${KIND}' '${MCV}' '${LOADER}'" <<'REMOTE'
+run_ssh "sudo bash -s -- '${SLUG}' '${KIND}' '${MCV}' '${LOADER}' '${VERSION}'" <<'REMOTE'
 set -euo pipefail
 SLUG="$1"; KIND="$2"; MCV="$3"; LOADER="$4"
-UA="oracle-minecraft-setup/${VERSION}"
+UA="oracle-minecraft-setup/$5"
 S=/opt/minecraft/server
 B=/opt/minecraft/backups
 mkdir -p "$B"
@@ -139,6 +141,11 @@ else
         | select((.env.server // "required") != "unsupported")
         | [.downloads[0], .path, (.hashes.sha1 // "")] | @tsv' "$IDX" > "${T}/list.tsv"
     while IFS=$'\t' read -r url path sha; do
+        # Path traversal : 'path' vient de l'index .mrpack (non fiable).
+        # On n'accepte que des chemins relatifs restant dans $S.
+        case "$path" in
+            ""|/*|*"../"*) echo "[ERREUR] chemin rejeté : $path" >&2; exit 1 ;;
+        esac
         dest="${S}/${path}"
         mkdir -p "$(dirname "$dest")"
         curl -fsSL -A "$UA" -o "$dest" "$url"

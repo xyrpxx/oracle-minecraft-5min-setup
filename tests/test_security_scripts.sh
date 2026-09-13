@@ -29,7 +29,8 @@ assert_exit_zero "syntaxe bash valide" bash -n security/keepalive.sh
 assert_file_contains security/keepalive.sh "sha256sum"             "utilise sha256 pour brûler le CPU"
 assert_file_contains security/keepalive.sh "ON_MIN"                "durée ON configurable"
 assert_file_contains security/keepalive.sh "OFF_MIN"               "durée OFF configurable (évite 100% CPU)"
-assert_file_contains security/keepalive.sh "nproc"                 "adapte au nombre de cœurs"
+assert_file_contains security/keepalive.sh "UN SEUL worker"        "un seul worker (~25% CPU, pas de concurrence MC)"
+assert_file_not_contains security/keepalive.sh "nproc"             "plus de workers par cœur (surconsommation)"
 
 echo "-- discord-alert@.service (alerte systemd) --"
 assert_file_exists security/discord-alert@.service "discord-alert@.service présent"

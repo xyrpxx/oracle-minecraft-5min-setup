@@ -25,6 +25,8 @@ FABRIC_META="https://meta.fabricmc.net/v2/versions/loader"
 INSTALL_ROOT="/opt/minecraft"
 SERVER_DIR="${INSTALL_ROOT}/server"
 STAGING="/tmp/setup"
+STATE_DIR="${INSTALL_ROOT}/.state"
+STATE_FILE="${STATE_DIR}/provision.state"
 
 # Build Forge par défaut pour MC 1.20.1 (modifiable via --forge-build).
 FORGE_BUILD="47.2.0"
@@ -36,22 +38,35 @@ PLAYERS="20" INSTALL_CRAFTY="false" MODPACK="none" PACK_URL="-" MODE="install"
 die() { printf '\n[ERREUR FATALE] %s\n' "$*" >&2; exit 1; }
 log()  { printf '[provision] %s\n' "$*"; }
 
+# Marque une étape comme réussie (pour reprise après crash SSH)
+mark_step() {
+    mkdir -p "$STATE_DIR"
+    printf '%s\t%s\n' "$(date -Iseconds)" "$1" >> "$STATE_FILE"
+}
+is_step_done() {
+    [[ -f "$STATE_FILE" ]] && grep -q -F $'\t'"$1" "$STATE_FILE"
+}
+
 usage() {
     sed -n 's/^# \{0,1\}//p' "$0" | sed -n '3,20p'
 }
 
 parse_args() {
+    require_val() { # $1 = flag, $2 = valeur éventuelle
+        [[ -n "${2:-}" ]] || die "L'option $1 attend une valeur (voir --help)"
+        printf '%s' "$2"
+    }
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --ip)           REMOTE_IP="$2"; shift 2 ;;
-            --server-type)  SERVER_TYPE="$2"; shift 2 ;;
-            --mc-version)   MC_VERSION="$2"; shift 2 ;;
-            --ram)          RAM_GB="$2"; shift 2 ;;
-            --players)      PLAYERS="$2"; shift 2 ;;
-            --crafty)       INSTALL_CRAFTY="$2"; shift 2 ;;
-            --modpack)      MODPACK="$2"; shift 2 ;;
-            --pack-url)     PACK_URL="$2"; shift 2 ;;
-            --forge-build)  FORGE_BUILD="$2"; shift 2 ;;
+            --ip)           REMOTE_IP="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --server-type)  SERVER_TYPE="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --mc-version)   MC_VERSION="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --ram)          RAM_GB="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --players)      PLAYERS="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --crafty)       INSTALL_CRAFTY="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --modpack)      MODPACK="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --pack-url)     PACK_URL="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --forge-build)  FORGE_BUILD="$(require_val "$1" "${2:-}")"; shift 2 ;;
             --update-server) MODE="update"; shift ;;
             -h|--help)      usage; exit 0 ;;
             *) die "Argument inconnu : $1 (voir --help)" ;;
@@ -107,10 +122,13 @@ ensure_java() { # major_voulu
     apt-get install -y -qq "openjdk-${want}-jre-headless" >/dev/null 2>&1 \
         || die "openjdk-${want} indisponible sur cette Ubuntu alors que Minecraft ${MC_VERSION} exige Java ${want}"
     # Si plusieurs JDK cohabitent, forcer le bon comme défaut.
-    update-alternatives --set java "/usr/lib/jvm/java-${want}-openjdk-arm64/bin/java" >/dev/null 2>&1 || true
+    # Chemin ARM64 (cible Ampere A1 du projet) avec repli auto x86_64.
+    update-alternatives --set java "/usr/lib/jvm/java-${want}-openjdk-arm64/bin/java" >/dev/null 2>&1 \
+        || update-alternatives --set java "/usr/lib/jvm/java-${want}-openjdk-amd64/bin/java" >/dev/null 2>&1 || true
 }
 
 step_system_packages() {
+    is_step_done "system-packages" && { log "Étape 'paquets système' déjà faite — sautée."; return 0; }
     log "Mise à jour du système et installation des paquets..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
@@ -124,18 +142,22 @@ step_system_packages() {
     # résolu depuis les métadonnées officielles Mojang.
     ensure_java "$(required_java_major)"
     log "Java en place : $(java -version 2>&1 | head -n 1)"
+    mark_step "system-packages"
 }
 
 step_minecraft_user() {
+    is_step_done "minecraft-user" && { log "Étape 'utilisateur minecraft' déjà faite — sautée."; return 0; }
     if id -u minecraft >/dev/null 2>&1; then
         log "Utilisateur système 'minecraft' déjà présent."
     else
         log "Création de l'utilisateur système 'minecraft' (sans privilèges)..."
         useradd -r -m -U -d "$INSTALL_ROOT" -s /usr/sbin/nologin minecraft
     fi
+    mark_step "minecraft-user"
 }
 
 step_directories() {
+    is_step_done "directories" && { log "Étape 'répertoires' déjà faite — sautée."; return 0; }
     mkdir -p "${INSTALL_ROOT}/server" "${INSTALL_ROOT}/backups" "${INSTALL_ROOT}/bin"
     # Copie des outils d'administration (présents uniquement en mode install,
     # lorsque le staging /tmp/setup existe).
@@ -145,6 +167,13 @@ step_directories() {
         chmod 755 "${INSTALL_ROOT}/bin/rcon_client.py" "${INSTALL_ROOT}/bin/remote_provision.sh"
     fi
     chown -R minecraft:minecraft "$INSTALL_ROOT"
+    # Auto-import dans Crafty si le binaire est disponible
+    if [[ -f "${STAGING}/deploy/crafty-seed.sh" ]] && [[ "$INSTALL_CRAFTY" == "true" ]]; then
+        cp "${STAGING}/deploy/crafty-seed.sh" "${INSTALL_ROOT}/bin/crafty-seed.sh"
+        chmod 755 "${INSTALL_ROOT}/bin/crafty-seed.sh"
+        chown minecraft:minecraft "${INSTALL_ROOT}/bin/crafty-seed.sh"
+    fi
+    mark_step "directories"
 }
 
 step_firewall() {
@@ -170,6 +199,23 @@ step_crafty() {
 
 download_file() { # url destination
     curl -fsSL --retry 3 -o "$2" "$1" || die "Téléchargement échoué : $1"
+    [[ -s "$2" ]] || die "Téléchargement vide (0 octet) : $1"
+}
+
+# Télécharge + vérifie le sha1 quand l'amont le publie (Mojang oui, Maven
+# via sidecar .sha1 quand disponible). Sans hash de référence, on échoue
+# ouvertement plutôt que de prétendre vérifier : l'appelant doit décider.
+download_verified() { # url destination sha1_attendu_ou_vide
+    local url="$1" dest="$2" want="${3:-}"
+    download_file "$url" "$dest"
+    if [[ -n "$want" ]]; then
+        [[ "$want" =~ ^[0-9a-fA-F]{40}$ ]] || die "sha1 de référence malformé pour $url"
+        printf '%s  %s\n' "$want" "$dest" | sha1sum -c - >/dev/null \
+            || { rm -f "$dest"; die "sha1 INCORRECT pour $url (fichier supprimé, réessayez)"; }
+        log "sha1 vérifié : ${dest##*/}"
+    else
+        log "WARN: aucun hash publié pour ${url} — intégrité non vérifiable au-delà de HTTPS/TLS."
+    fi
 }
 
 generate_forge_start_script() {
@@ -203,15 +249,23 @@ EOF
 
 install_engine_vanilla() {
     log "Installation Vanilla ${MC_VERSION} (résolution via piston-meta)..."
-    local version_url server_url
+    local version_url server_url server_sha1 meta_json
     version_url="$(curl -fsSL "$MOJANG_MANIFEST" \
         | jq -r --arg v "$MC_VERSION" '.versions[] | select(.id==$v) | .url')"
     [[ -n "$version_url" && "$version_url" != "null" ]] \
         || die "Version Vanilla introuvable : ${MC_VERSION}"
-    server_url="$(curl -fsSL "$version_url" | jq -r '.downloads.server.url')"
+    meta_json="$(mktemp)"
+    curl -fsSL "$version_url" -o "$meta_json" \
+        || { rm -f "$meta_json"; die "Métadonnées Mojang injoignables pour ${MC_VERSION}"; }
+    server_url="$(jq -r '.downloads.server.url // empty' "$meta_json")"
     [[ -n "$server_url" && "$server_url" != "null" ]] \
-        || die "Pas de binaire serveur pour ${MC_VERSION}"
-    download_file "$server_url" "${SERVER_DIR}/server.jar"
+        || { rm -f "$meta_json"; die "Pas de binaire serveur pour ${MC_VERSION}"; }
+    # Mojang publie le sha1 officiel : vérification stricte (fail-closed).
+    server_sha1="$(jq -r '.downloads.server.sha1 // empty' "$meta_json")"
+    rm -f "$meta_json"
+    [[ "$server_sha1" =~ ^[0-9a-f]{40}$ ]] \
+        || die "Mojang ne publie pas de sha1 pour ${MC_VERSION} — refus d'installer sans vérification"
+    download_verified "$server_url" "${SERVER_DIR}/server.jar" "$server_sha1"
     chown minecraft:minecraft "${SERVER_DIR}/server.jar"
     write_simple_start_script "server.jar"
 }
@@ -240,7 +294,12 @@ install_engine_forge() {
     local base="https://maven.minecraftforge.net/net/minecraftforge/forge/${coords}"
     local installer="forge-${coords}-installer.jar"
     log "Installation Forge ${coords} (2 à 3 minutes)..."
-    download_file "${base}/${installer}" "${SERVER_DIR}/${installer}"
+    # Maven publie un sidecar .sha1 : vérification stricte quand présent.
+    local forge_sha1=""
+    forge_sha1="$(curl -fsSL --max-time 20 "${base}/${installer}.sha1" 2>/dev/null | tr -d ' \n\r' || true)"
+    [[ "$forge_sha1" =~ ^[0-9a-f]{40}$ ]] \
+        || { log "WARN: sidecar .sha1 Forge absent — vérification limitée à HTTPS/TLS."; forge_sha1=""; }
+    download_verified "${base}/${installer}" "${SERVER_DIR}/${installer}" "$forge_sha1"
     ( cd "$SERVER_DIR" && sudo -u minecraft java -jar "$installer" --installServer "$SERVER_DIR" )
     rm -f "${SERVER_DIR:?}/${installer}"
     generate_forge_start_script
@@ -261,7 +320,10 @@ install_engine_fabric() {
     local url_ok=""
     for u in "${FABRIC_META}/${MC_VERSION}/${loader}/${launcher}/server/jar" \
              "${FABRIC_META}/${MC_VERSION}/${loader}/1.1.0/server/jar"; do
-        if curl -fsSL --retry 2 -o "$dest" "$u"; then
+        # Fabric ne publie pas de hash : on vérifie au minimum que le jar
+        # téléchargé est non vide (download_file échoue sinon) et on journalise
+        # l'URL exacte pour traçabilité.
+        if download_file "$u" "$dest"; then
             url_ok="$u"
             break
         fi

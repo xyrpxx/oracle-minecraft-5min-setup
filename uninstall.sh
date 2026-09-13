@@ -22,7 +22,7 @@ UI_LANG="${UI_LANG%%_*}"
 case "$UI_LANG" in fr) UI_LANG=fr ;; *) UI_LANG=en ;; esac
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --lang) UI_LANG="$2"; shift 2 ;;
+        --lang) if [[ -n "${2:-}" ]]; then UI_LANG="$2"; shift 2; else shift; fi ;;
         *) shift ;;
     esac
 done
@@ -48,12 +48,18 @@ if ask_yes_no "${M_DEL_LAST_BACKUP}" "n"; then
     bash "${SCRIPT_DIR}/utils/backup.sh"
 fi
 
-run_ssh "bash -s" <<'REMOTE'
-set -uo pipefail
+run_ssh "sudo bash -s" <<'REMOTE'
+set -euo pipefail
 
 echo "[uninstall] Stopping the minecraft service..."
 systemctl disable --now minecraft 2>/dev/null || true
 rm -f /etc/systemd/system/minecraft.service
+# Nettoie aussi les unités optionnelles (keepalive, auto-sleep, alerte Discord)
+systemctl disable --now keepalive 2>/dev/null || true
+rm -f /etc/systemd/system/keepalive.service
+systemctl disable --now auto-sleep.timer 2>/dev/null || true
+rm -f /etc/systemd/system/auto-sleep.service /etc/systemd/system/auto-sleep.timer
+rm -f /etc/systemd/system/discord-alert@.service
 systemctl daemon-reload
 
 echo "[uninstall] Stopping Crafty Controller..."

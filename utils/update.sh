@@ -45,7 +45,7 @@ case "$SELECTED_CHOICE" in
     2)
         while true; do
             read -r -p "→ Nouveau build Forge, format 47.2.0 (voir files.minecraftforge.net) : " NEW_BUILD
-            is_valid_mc_version "$NEW_BUILD" && break
+            [[ "$NEW_BUILD" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && break
             warn "Format attendu : X.Y.Z (ex. 47.4.10)."
         done
         run_ssh "sudo bash /opt/minecraft/bin/remote_provision.sh \

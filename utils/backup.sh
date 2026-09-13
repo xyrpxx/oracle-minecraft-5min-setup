@@ -20,13 +20,13 @@ load_server_conf "${SCRIPT_DIR}/.server.conf"
 # Dossier local de rapatriement (par défaut ~/minecraft-backups).
 # Utiliser --local-dir <path> ou LOCAL_DIR=<path> pour changer.
 LOCAL_DIR="${LOCAL_DIR:-$HOME/minecraft-backups}"
-case "$1" in
-    --local-dir) LOCAL_DIR="$2"; shift 2 ;;
+case "${1:-}" in
+    --local-dir) LOCAL_DIR="${2:-}"; shift 2 ;;
 esac
 mkdir -p "$LOCAL_DIR" 2>/dev/null || warn "Impossible de créer $LOCAL_DIR — sauvegarde locale ignorée."
 
 STAMP_PATH=""
-out="$(run_ssh "bash -s -- ${KEEP}" <<'REMOTE'
+out="$(run_ssh "sudo bash -s -- ${KEEP}" <<'REMOTE'
 set -euo pipefail
 KEEP="$1"
 SERVER_DIR=/opt/minecraft/server

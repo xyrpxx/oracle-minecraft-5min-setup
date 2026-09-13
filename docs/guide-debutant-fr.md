@@ -136,8 +136,16 @@ affichés par Crafty au premier lancement, visibles via
 
 Crafty est ton tableau de bord façon Aternos : boutons démarrer/arrêter,
 console en direct, gestionnaire de fichiers et sauvegardes planifiées,
-le tout dans le navigateur. L'installateur a déjà déposé le serveur là où
-Crafty peut le voir — il ne reste qu'à le lui indiquer une fois :
+le tout dans le navigateur.
+
+**Chemin rapide (recommandé) :** `bash manage.sh` → option 9 → option **e**.
+Colle le mot de passe admin Crafty quand on te le demande (affiché par Crafty
+au premier lancement : `ssh ubuntu@IP 'sudo docker logs crafty_controller'`)
+— le serveur est créé via l'API Crafty, sans clic. Puis ouvre
+`https://IP_DE_VOTRE_VM:8443` et appuie sur **Start**.
+
+**Repli manuel** (si l'API échoue) : l'installateur a déjà déposé le serveur
+là où Crafty peut le voir — il ne reste qu'à le lui indiquer une fois :
 
 1. Ouvre `https://IP_DE_VOTRE_VM:8443` et connecte-toi.
 2. Clique **New Server** (ou **Server Wizard**) → choisis **import an

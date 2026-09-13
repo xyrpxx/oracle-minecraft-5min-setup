@@ -79,9 +79,20 @@ bash manage.sh
 - **Des mods** — Forge, Fabric, Vanilla, ou un modpack prêt à l'emploi
 - **Un tableau de bord web comme Aternos** — boutons démarrer/arrêter,
   console en direct, gestionnaire de fichiers, sauvegardes, dans ton
-  navigateur (branchement unique de 30 secondes)
-- **Un menu unique dans le terminal** — `bash manage.sh` fait tout le reste
+  navigateur (import auto de 30 secondes : `bash manage.sh` → menu 9 → `e`)
+- **Un menu unique dans le terminal** — `bash manage.sh` fait tout le reste (français & anglais)
 - **Des filets de sécurité** — sauvegarde, restauration, surveillance et mises à jour en une commande
+
+## 🆕 Quoi de neuf en v3.7
+
+- **Auto-stop façon Aternos** (vrai suivi d'inactivité) — menu 9 → `c`, ou `utils/auto-sleep.sh`
+- **Les sauvegardes quittent la VM** — `scp` vers ta machine + upload optionnel vers OCI Object Storage via `rclone`
+- **Restauration sécurisée** — snapshot pré-restauration + extraction propre
+- **Anti-réclamation OCI** — menu 9 → `b` (`security/keepalive.sh` occupe la VM, limité à ~1 cœur) + `security/discord-alert@.service` t'alerte
+- **Reprise après crash SSH** — fichier d'état pour continuer une installation coupée
+- **Import auto Crafty** — menu 9 → `e` (`deploy/crafty-seed.sh` crée le serveur via l'API, sans clic manuel)
+- **Téléchargements vérifiés** — chaque jar serveur contrôlé par sha1 contre l'éditeur (Mojang strict, Forge via sidecar Maven)
+- **Menu quotidien bilingue** — `bash manage.sh` parle français & anglais, détecté automatiquement
 
 ## 🧾 Ce qu'il te faut
 
@@ -176,7 +187,7 @@ même version → toujours lancer le jeu depuis CurseForge.
 
 | Je veux… | Je lance |
 |---|---|
-| **Tout faire depuis un seul menu à numéros** | `bash manage.sh` |
+| **Tout faire depuis un seul menu à numéros** (français & anglais) | `bash manage.sh` (`--lang fr` pour forcer) |
 | Installer un mod / modpack par recherche (Modrinth) | `./utils/mods.sh` |
 | Envoyer une commande de jeu (rendre quelqu'un admin, mettre le jour…) | `./utils/console.sh "op TonPseudo"` |
 | Sauvegarder le monde | `./utils/backup.sh` |
@@ -184,7 +195,11 @@ même version → toujours lancer le jeu depuis CurseForge.
 | Voir CPU / RAM / joueurs | `./utils/monitor.sh` |
 | Mettre à jour Minecraft, Forge ou le modpack | `./utils/update.sh` |
 | Réserver le serveur aux joueurs invités | `./security/whitelist_manager.sh add Pseudo` |
-| Renforcer la sécurité (conseillé après l'install) | `./security/hardening.sh` |
+| Renforcer la sécurité (conseillé après l'install) | menu 9 → `a`, ou `./security/hardening.sh` |
+| Garder la VM au-dessus du seuil d'inactivité Oracle | menu 9 → `b` (keepalive) — **ou** auto-stop ci-dessous, jamais les deux |
+| Éteindre le serveur quand personne ne joue (façon Aternos) | menu 9 → `c` (auto-stop) — **ou** keepalive ci-dessus, jamais les deux |
+| Recevoir une alerte Discord en cas de panne | menu 9 → `d` |
+| Importer le serveur dans Crafty (un clic, une fois) | menu 9 → `e` |
 | Tout supprimer proprement | `./uninstall.sh` |
 
 Toutes ces commandes sont re-lançables — elles réparent plutôt qu'elles ne cassent.
@@ -266,7 +281,7 @@ Garanties intégrées d'office :
 | Ton ordinateur | Windows (Git Bash) · macOS (compatible bash 3.2) · Linux |
 | Machine cloud | Ubuntu 22.04 / 24.04 LTS · ARM64 (Ampere A1) |
 | Minecraft | 1.20.1 → **26.2** (Java 21 ou 25 auto-installé selon la version) |
-| Qualité | 370+ assertions automatisées : `bash tests/run_tests.sh` |
+| Qualité | 485 assertions automatisées : `bash tests/run_tests.sh` |
 
 </details>
 

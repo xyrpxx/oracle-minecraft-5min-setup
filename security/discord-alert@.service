@@ -1,0 +1,30 @@
+[Unit]
+Description=Send Minecraft OCI alert to Discord
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Le webhook URL est lu depuis /opt/minecraft/.env (DISCORD_WEBHOOK=...).
+# Sans le tiret, un fichier manquant est ignoré silencieusement puis curl
+# échoue sur une URL vide : on garde le tiret mais le script vérifie.
+# Installation : sudo cp security/discord-alert@.service /etc/systemd/system/
+# puis sudo systemctl edit minecraft.service → ajouter
+#   OnFailure=discord-alert@%n.service
+# (pas de 'systemctl enable' : c'est un template déclenché par OnFailure).
+EnvironmentFile=-/opt/minecraft/.env
+Type=oneshot
+User=nobody
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+ExecStart=/bin/bash -c '\
+    [[ -n "${DISCORD_WEBHOOK:-}" ]] || { echo "discord-alert: DISCORD_WEBHOOK vide (voir /opt/minecraft/.env)" >&2; exit 1; }; \
+    MSG="Service *%i* failed on *$(hostname)* at $(date -Iseconds)"; \
+    PAYLOAD="$(DISCORD_MSG="$MSG" python3 -c "import json,os; print(json.dumps({\"username\":\"Minecraft-OCI\",\"content\":os.environ[\"DISCORD_MSG\"]}))")"; \
+    curl -fsSL -X POST --max-time 15 "${DISCORD_WEBHOOK}" \
+      -H "Content-Type: application/json" \
+      -d "$PAYLOAD" \
+    || echo "discord-alert: curl failed (check DISCORD_WEBHOOK in /opt/minecraft/.env)"'
+StandardOutput=journal
+StandardError=journal
+Restart=no

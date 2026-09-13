@@ -63,28 +63,34 @@ EOF
 }
 
 parse_args() {
+    # Garde anti-flags-sans-valeur : "$2" nu mourrait en 'unbound variable'
+    # (set -u) au lieu d'afficher l'usage. require_val consomme flag+valeur.
+    require_val() { # $1 = flag, $2 = valeur éventuelle
+        [[ -n "${2:-}" ]] || { load_language; die "${M_ERR_OPT} $1 (--help)"; }
+        printf '%s' "$2"
+    }
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --lang)        UI_LANG="$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')"
+            --lang)        UI_LANG="$(printf '%s' "$(require_val "$1" "${2:-}")" | tr '[:upper:]' '[:lower:]')"
                            case "$UI_LANG" in
                                fr|en) ;;
                                *) printf '[ERROR] --lang expects fr or en\n' >&2; exit 1 ;;
                            esac
                            shift 2 ;;
-            --mode)        case "$2" in
+            --mode)        case "$(require_val "$1" "${2:-}")" in
                                guide|guided) GUIDED_MODE="true" ;;
                                expert)       GUIDED_MODE="false" ;;
                                *) printf '[ERROR] --mode expects guide or expert\n' >&2; exit 1 ;;
                            esac; shift 2 ;;
-            --ip)          ORACLE_IP="$2"; shift 2 ;;
-            --key)         SSH_KEY_PATH="$2"; shift 2 ;;
-            --type)        SERVER_TYPE="$2"; shift 2 ;;
-            --mc-version)  MC_VERSION="$2"; shift 2 ;;
-            --ram)         RAM_GB="$2"; shift 2 ;;
-            --players)     PLAYERS="$2"; shift 2 ;;
-            --crafty)      INSTALL_CRAFTY="$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')"; shift 2 ;;
-            --modpack)     MODPACK="$2"; shift 2 ;;
-            --pack-url)    PACK_URL="$2"; shift 2 ;;
+            --ip)          ORACLE_IP="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --key)         SSH_KEY_PATH="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --type)        SERVER_TYPE="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --mc-version)  MC_VERSION="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --ram)         RAM_GB="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --players)     PLAYERS="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --crafty)      INSTALL_CRAFTY="$(printf '%s' "$(require_val "$1" "${2:-}")" | tr '[:upper:]' '[:lower:]')"; shift 2 ;;
+            --modpack)     MODPACK="$(require_val "$1" "${2:-}")"; shift 2 ;;
+            --pack-url)    PACK_URL="$(require_val "$1" "${2:-}")"; shift 2 ;;
             --yes)         ASSUME_YES="true"; shift ;;
             --dry-run)     DRY_RUN="true"; shift ;;
             -h|--help)     usage; exit 0 ;;

@@ -6,6 +6,11 @@
 # Configuration locale générée par setup.sh (contient IP + chemin de clé)
 .server.conf
 
+# Secrets / tokens locaux (jamais versionnés)
+.env
+*.api-token
+*-token
+
 # Sauvegardes et binaires
 *.tar.gz
 *.zip
@@ -18,3 +23,6 @@ Thumbs.db
 # Python
 __pycache__/
 *.pyc
+
+# Scratch de session agent (plans locaux, jamais versionnés)
+.zcode/

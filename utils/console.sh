@@ -25,12 +25,20 @@ if [[ $# -lt 1 ]]; then
     exit 1
 fi
 
-# Commande complète (les mots sont recollés) + échappement des guillemets
-# pour le passage à travers SSH.
+# Commande complète (les mots sont recollés).
+# Sécurité : la commande voyage via un argument positionnel du shell distant
+# (bash -s -- "$CMD"), JAMAIS interpolée dans une chaîne — aucun caractère
+# spécial ($, backticks, quotes...) ne peut s'exécuter sur la VM.
 CMD="$*"
-CMD="${CMD//\"/\\\"}"
 
 load_server_conf "${SCRIPT_DIR}/.server.conf"
 
-run_ssh "sudo bash -c '. /opt/minecraft/server/.rcon-credentials && \
-python3 /opt/minecraft/bin/rcon_client.py 127.0.0.1 \$RCON_PORT \$RCON_PASSWORD \"${CMD}\"'"
+# base64 évite tout problème de quoting à travers SSH.
+CMD_B64="$(printf '%s' "$CMD" | base64 | tr -d '\n')"
+run_ssh "sudo bash -s -- '${CMD_B64}'" <<'REMOTE'
+set -euo pipefail
+CMD="$(printf '%s' "$1" | base64 -d)"
+# shellcheck disable=SC1091
+. /opt/minecraft/server/.rcon-credentials
+python3 /opt/minecraft/bin/rcon_client.py 127.0.0.1 "$RCON_PORT" "$RCON_PASSWORD" "$CMD"
+REMOTE

@@ -42,7 +42,7 @@ is_valid_backup_name "$ARCHIVE_NAME" || die "Nom d'archive invalide : $ARCHIVE_N
 warn "Le monde actuel sera REMPLACÉ par le contenu de ${ARCHIVE_NAME}."
 ask_yes_no "Confirmer la restauration ?" "n" || { info "Restauration annulée."; exit 0; }
 
-run_ssh "bash -s -- '${ARCHIVE_NAME}'" <<'REMOTE'
+run_ssh "sudo bash -s -- '${ARCHIVE_NAME}'" <<'REMOTE'
 set -euo pipefail
 NAME="$1"
 SERVER_DIR=/opt/minecraft/server
@@ -68,11 +68,20 @@ systemctl stop minecraft
 # 3. Nettoyage sélectif : on ne supprime QUE les sous-éléments présents
 #    dans l'archive (server.properties, eula.txt, .rcon-credentials préservés)
 #    Cela évite qu'un ancien monde / mod de l'archive ne se mélange à l'existant.
+#    Les entrées sont validées : pas de chemin absolu, pas de '..', pas de
+#    glob — une archive hostile ne doit jamais supprimer hors du serveur.
 ARCHIVE="${BACKUP_DIR}/${NAME}"
+set -f # désactive le globbing pour la boucle ci-dessous
 map_to_remove="$(tar tzf "$ARCHIVE" 2>/dev/null | awk -F/ '{print $1}' | sort -u)"
-for entry in $map_to_remove; do
+while IFS= read -r entry; do
+    case "$entry" in
+        ""|"."|".."|/*|*".."*) continue ;;
+    esac
+    # Noms simples uniquement (lettres, chiffres, . _ -) pour rm -rf.
+    [[ "$entry" =~ ^[A-Za-z0-9._-]+$ ]] || continue
     [[ -e "${SERVER_DIR}/${entry}" ]] && rm -rf -- "${SERVER_DIR:?}/${entry}"
-done
+done <<< "$map_to_remove"
+set +f
 
 # 4. Extraction propre
 cd "$SERVER_DIR"

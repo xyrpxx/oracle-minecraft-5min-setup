@@ -20,7 +20,7 @@ usage() { sed -n 's/^# \{0,1\}//p' "$0" | sed -n '3,18p'; }
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --security-list-ocid) SL_ID="$2"; shift 2 ;;
+        --security-list-ocid) [[ -n "${2:-}" ]] || { echo "L'option --security-list-ocid attend une valeur." >&2; exit 1; }; SL_ID="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Argument inconnu : $1" >&2; exit 1 ;;
     esac
@@ -35,9 +35,6 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 echo "[1/4] Lecture de la security list..."
-oci network security-list get --security-list-id "$SL_ID" > "${TMP}/sl.json"
-
-echo "[2/4] Construction des règles à ajouter..."
 oci network security-list get --security-list-id "$SL_ID" \
     --query 'data."ingress-security-rules"' --raw-output > "${TMP}/existing.json"
 
@@ -54,16 +51,26 @@ DESC_TCP="oracle-minecraft-setup TCP 25565"
 DESC_UDP="oracle-minecraft-setup UDP 25565"
 DESC_CRAFTY="oracle-minecraft-setup TCP 8443"
 
-EXISTING_COUNT="$(jq --arg d "$DESC_TCP" '[.[] | select(.description == $d)] | length' "${TMP}/existing.json")"
-if [[ "$EXISTING_COUNT" != "0" ]]; then
-    echo "[2/4] Règles déjà présentes (description identique) — rien à faire."
+# Idempotence : les 3 règles doivent exister, pas seulement la première.
+missing=0
+for d in "$DESC_TCP" "$DESC_UDP" "$DESC_CRAFTY"; do
+    if [[ "$(jq --arg d "$d" '[.[] | select(.description == $d)] | length' "${TMP}/existing.json")" == "0" ]]; then
+        missing=1
+    fi
+done
+if [[ "$missing" == "0" ]]; then
+    echo "[2/4] Règles déjà présentes (descriptions identiques) — rien à faire."
     exit 0
 fi
 
+# N'ajouter que les règles manquantes (fusion sûre : les existantes restent).
 {
-    make_rule 6  25565 "$DESC_TCP"
-    make_rule 17 25565 "$DESC_UDP"
-    make_rule 6  8443  "$DESC_CRAFTY"
+    [[ "$(jq --arg d "$DESC_TCP" '[.[] | select(.description == $d)] | length' "${TMP}/existing.json")" == "0" ]] \
+        && make_rule 6  25565 "$DESC_TCP"
+    [[ "$(jq --arg d "$DESC_UDP" '[.[] | select(.description == $d)] | length' "${TMP}/existing.json")" == "0" ]] \
+        && make_rule 17 25565 "$DESC_UDP"
+    [[ "$(jq --arg d "$DESC_CRAFTY" '[.[] | select(.description == $d)] | length' "${TMP}/existing.json")" == "0" ]] \
+        && make_rule 6  8443  "$DESC_CRAFTY"
 } > "${TMP}/new.json"
 
 echo "[3/4] Fusion des règles existantes et nouvelles..."

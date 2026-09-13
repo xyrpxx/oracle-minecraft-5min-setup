@@ -91,7 +91,8 @@ shell_quote() {
 # Vérifie qu'un identifiant de modpack figure dans le registre (sans jq local).
 modpack_id_exists() {
     local id="$1" manifest="${2:-modpacks/manifest.json}"
-    grep -q "\"id\"[[:space:]]*:[[:space:]]*\"$id\"" "$manifest" 2>/dev/null
+    grep -q -F "\"id\": \"$id\"" "$manifest" 2>/dev/null \
+        || grep -q -F "\"id\":\"$id\"" "$manifest" 2>/dev/null
 }
 
 # ---------------------------------------------------------------------------

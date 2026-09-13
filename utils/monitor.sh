@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 load_server_conf "${SCRIPT_DIR}/.server.conf"
 
-run_ssh "bash -s" <<'REMOTE'
+run_ssh "sudo bash -s" <<'REMOTE'
 set -euo pipefail
 SERVER_DIR=/opt/minecraft/server
 

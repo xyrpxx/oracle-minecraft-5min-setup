@@ -92,7 +92,8 @@ assert_exit_zero "syntaxe bash valide" bash -n utils/auto-sleep.sh
 assert_file_contains utils/auto-sleep.sh "list"                          "interroge le nombre de joueurs"
 assert_file_contains utils/auto-sleep.sh "systemctl stop minecraft"     "arrête le serveur quand 0 joueur"
 assert_file_contains utils/auto-sleep.sh "IDLE_MINUTES"                "délai configurable (30 min par défaut)"
-assert_file_contains utils/auto-sleep.sh "ActiveEnterTimestampMonotonic" "mesure le temps d'activité"
+assert_file_contains utils/auto-sleep.sh "empty_since"                 "vrai idle : marqueur depuis-quand-vide"
+assert_file_not_contains utils/auto-sleep.sh "ActiveEnterTimestampMonotonic" "plus de mesure uptime-service (faux idle)"
 assert_file_contains utils/auto-sleep.sh "systemctl is-active --quiet"  "ne fait rien si déjà éteint"
 
 echo "-- backup.sh (rclone OCI Object Storage optionnel) --"

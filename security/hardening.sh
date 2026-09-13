@@ -22,7 +22,7 @@ warn "Ce script va interdire le login SSH root et l'authentification par mot de 
 warn "Votre connexion par clé restera fonctionnelle (utilisée par ce projet)."
 ask_yes_no "Continuer ?" "n" || { info "Durcissement annulé."; exit 0; }
 
-run_ssh "bash -s" <<'REMOTE'
+run_ssh "sudo bash -s" <<'REMOTE'
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
@@ -36,6 +36,7 @@ sshd -t
 systemctl reload ssh 2>/dev/null || systemctl reload sshd
 
 echo "[hardening] 2/3 — fail2ban (protection brute-force SSH)..."
+apt-get update -qq >/dev/null 2>&1 || true
 apt-get install -y -qq fail2ban >/dev/null
 cat > /etc/fail2ban/jail.d/minecraft-ssh.local <<'JAIL'
 [sshd]
